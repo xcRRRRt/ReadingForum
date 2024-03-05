@@ -1,0 +1,33 @@
+{% extends 'base_forum.html' %}
+{% load static %}
+
+{% block content %}
+  <script src="{% static 'js/check_register.js' %}"></script>
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-4">
+        <form name="register" id="register-form">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label" for="username">用户名</label>
+            <input type="text" class="form-control" name="username" id="username" placeholder="5-20字符">
+            <div class="invalid-feedback" id="username-feedback"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="password">密码</label>
+            <input type="password" class="form-control" name="password" id="password" placeholder="8-20位密码">
+            <div class="invalid-feedback" id="password-feedback"></div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label" for="password-ensure">确认密码</label>
+            <input type="password" class="form-control" name="password-ensure" id="password-ensure">
+            <div class="invalid-feedback" id="password-ensure-feedback"></div>
+          </div>
+        </form>
+        <div class="d-grid">
+          <button id="submit" class="btn btn-block btn-primary">注册</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

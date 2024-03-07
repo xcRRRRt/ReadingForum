@@ -1,0 +1,15 @@
+.breadcrumb-item a:link {
+    text-decoration: none;
+}
+
+.breadcrumb-item a:visited {
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-item a:active {
+  text-decoration: underline;
+}

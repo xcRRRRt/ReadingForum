@@ -1,4 +1,4 @@
-from utils import get_db_handle
+from utils.dbconnect import get_db_handle
 
 COLLECTION_NAME = "userinfo"
 
@@ -11,8 +11,8 @@ def get_one_user_by_username(username):
     :return 用户文档
     """
     db_handle = get_db_handle(COLLECTION_NAME)
-    result = db_handle.find_one({"username": username})
-    return result
+    doc = db_handle.find_one({"username": username})
+    return doc
 
 
 def insert_one_user_info(**kwargs) -> bool:

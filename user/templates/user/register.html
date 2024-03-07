@@ -2,31 +2,40 @@
 {% load static %}
 
 {% block content %}
-  <script src="{% static 'js/check_register.js' %}"></script>
-  <div class="container mt-5">
+  <link rel="stylesheet" href="{% static 'css/breadcrumb.css' %}">
+  <div class="container">
+    <div class="mt-3 mb-4 ms-5">
+      <nav aria-label="breadcrumb">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">首页</a></li>
+          <li class="breadcrumb-item active" aria-current="page">注册</li>
+        </ul>
+      </nav>
+    </div>
     <div class="row justify-content-center">
       <div class="col-4">
-        <form name="register" id="register-form">
+        <form novalidate method="post" action="{% url 'register' %}">
           {% csrf_token %}
-          <div class="mb-3">
-            <label class="form-label" for="username">用户名</label>
-            <input type="text" class="form-control" name="username" id="username" placeholder="5-20字符">
-            <div class="invalid-feedback" id="username-feedback"></div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="password">密码</label>
-            <input type="password" class="form-control" name="password" id="password" placeholder="8-20位密码">
-            <div class="invalid-feedback" id="password-feedback"></div>
-          </div>
-          <div class="mb-4">
-            <label class="form-label" for="password-ensure">确认密码</label>
-            <input type="password" class="form-control" name="password-ensure" id="password-ensure">
-            <div class="invalid-feedback" id="password-ensure-feedback"></div>
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              <input type="{% if forloop.first %}text{% else %}password{% endif %}"
+                     class="form-control {% if field.errors %}is-invalid{% endif %} {% if form.non_field_errors and forloop.last %}is-invalid{% endif %}"
+                     name="{{ field.id_for_label }}"
+                     value="{% if field.value %}{{ field.value }}{% endif %}">
+              {{ field|striptags }}
+              <div class="invalid-feedback">
+                {{ field.errors|striptags }}
+                {% if form.non_field_errors and forloop.last %}
+                  {{ form.non_field_errors|striptags }}
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+          <div class="d-grid">
+            <button type="submit" class="btn btn-block btn-primary">注册</button>
           </div>
         </form>
-        <div class="d-grid">
-          <button id="submit" class="btn btn-block btn-primary">注册</button>
-        </div>
       </div>
     </div>
   </div>

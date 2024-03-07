@@ -1,11 +1,9 @@
-from datetime import datetime, date, time
-
-from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.views.generic import ListView
 
+from user.forms import LoginForm, RegisterForm
 from user.service.userinfoservice import *
+from utils.decorator import login_required
 
 
 # Create your views here.
@@ -16,40 +14,36 @@ def userinfo(request):
 
 def login(request):
     """登录"""
-    if request.method == 'POST':
-        username = request.POST["username"]
-        password = request.POST["password"]
-        result = login_by_username_password(username, password)
-        errors = {}
-        if result == 1:
-            errors['username_error'] = "未找到用户"
-        elif result == 2:
-            errors['password_error'] = "密码错误"
+    if request.method == 'GET':
+        form = LoginForm()
+        return render(request, 'user/login.html', {'form': form})
 
-        if errors:
-            print(errors)
-            return JsonResponse(errors)
-        else:
-            print("correct")
-            request.session['username'] = username
-            return JsonResponse({'is_success': True})
-    else:
-        return render(request, 'user/login.html')
+    form = LoginForm(request.POST)
+    if form.is_valid():
+        request.session['username'] = form.cleaned_data['username']
+        return render(request, "forum/home.html")
+    return render(request, 'user/login.html', {'form': form})
 
 
 def register(request):
     """注册"""
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        errors = {}
-        if not create_user(username=username, password=password):
-            errors['username_error'] = "用户名已被使用"
+    if request.method == 'GET':
+        form = RegisterForm()
+        print(form)
+        return render(request, 'user/register.html', {"form": form})
 
-        if errors:
-            return JsonResponse(errors)
-        else:
-            request.session['username'] = username
-            return JsonResponse({"is_success": True})
-    else:
-        return render(request, 'user/register.html')
+    form = RegisterForm(request.POST)
+    if form.is_valid():
+        username = form.cleaned_data['username']
+        password = form.cleaned_data['password']
+        create_user(username, password)
+        request.session['username'] = form.cleaned_data['username']
+        return render(request, "forum/home.html")
+    return render(request, "user/register.html", {"form": form})
+
+
+@login_required
+def logout(request):
+    """注销"""
+    request.session.clear()  # 删除session数据
+    return redirect(reverse("home"))

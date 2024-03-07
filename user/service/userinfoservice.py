@@ -6,29 +6,35 @@ COLLECTION_NAME = "userinfo"
 def create_user(username: str, password: str) -> bool:
     """
     创建一个新的用户
-
     :param username: 用户名
     :param password: 密码
     :return 是否创建成功
     """
-    user = get_one_user_by_username(username)
-    if user:
-        return False
     result = insert_one_user_info(username=username, password=password)
     return result
 
 
-def login_by_username_password(username: str, password: str) -> int:
+def is_user_exist(username: str) -> bool:
     """
-    登录
+    判断用户是否存在
+    :param username: 用户名
+    :return 用户是否存在
+    """
+    if get_one_user_by_username(username) is None:
+        return False
+    return True
 
+
+def is_password_correct(username: str, password: str) -> bool:
+    """
+    判断密码是否正确
     :param username: 用户名
     :param password: 密码
-    :return 未找到用户1，密码错误2, 成功0
+    :return 密码是否正确
     """
     user = get_one_user_by_username(username)
-    if not user:
-        return 1
     if user['password'] != password:
-        return 2
-    return 0
+        return False
+    return True
+
+

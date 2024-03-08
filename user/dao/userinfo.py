@@ -3,7 +3,7 @@ from utils.dbconnect import get_db_handle
 COLLECTION_NAME = "userinfo"
 
 
-def get_one_user_by_username(username):
+def find_user_by_username(username):
     """
     使用唯一的用户名查询一个用户
 

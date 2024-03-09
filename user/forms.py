@@ -1,7 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.core import validators
-from django.core.validators import EmailValidator
 
 from user.service.userinfo_service import *
 from user.service.verification_service import *
@@ -46,14 +44,46 @@ class EmailForm(BootStrapForm):
         validators=[validators.validate_email],
     )
 
+    page = forms.CharField(required=False)
 
-class RegisterForm(BootStrapForm):
-    username = forms.CharField(
-        label="用户名",
-        min_length=5,
-        max_length=20,
-        widget=forms.TextInput(),
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get("email")
+        page = cleaned_data.get("page")
+        if not page:
+            cleaned_data.setdefault("page", "/user/reset_verify")
+        if email and page:
+            if "register" in page:  # 如果是注册页面的话
+                if is_email_exist(email):
+                    self.add_error("email", "邮箱已被使用")
+            else:
+                if not is_email_exist(email):
+                    self.add_error("email", "邮箱不在数据库中，请确认使用了正确的邮箱")
+        return cleaned_data
+
+
+class VerifyForm(EmailForm):
+    verification_code = forms.CharField(
+        label="验证码",
+        widget=forms.TextInput()
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email_address = cleaned_data.get("email")
+        verification_code = cleaned_data.get("verification_code")
+        if email_address and verification_code:
+            if not verify_verification_code(email_address, verification_code):
+                self.add_error("verification_code", "验证码错误")
+        for key, field in self.fields.items():
+            if key in cleaned_data and key not in ["password", "password_ensure"]:
+                field.widget.attrs = {"class": "form-control is-valid"}
+            else:
+                field.widget.attrs = {"class": "form-control is-invalid"}
+        return cleaned_data
+
+
+class PasswordForm(BootStrapForm):
     password = forms.CharField(
         label="密码",
         min_length=8,
@@ -65,14 +95,27 @@ class RegisterForm(BootStrapForm):
         widget=forms.PasswordInput()
     )
 
-    email = forms.EmailField(
-        label="邮箱",
-        widget=forms.EmailInput()
-    )
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_ensure = cleaned_data.get("password_ensure")
+        if password and password_ensure:
+            if password != password_ensure:
+                self.add_error("password_ensure", "两次密码不一致")
+        for key, field in self.fields.items():
+            if key in cleaned_data and key not in ["password", "password_ensure"]:
+                field.widget.attrs = {"class": "form-control is-valid"}
+            else:
+                field.widget.attrs = {"class": "form-control is-invalid"}
+        return cleaned_data
 
-    verification_code = forms.CharField(
-        label="验证码",
-        widget=forms.TextInput()
+
+class RegisterForm(PasswordForm, VerifyForm):
+    username = forms.CharField(
+        label="用户名",
+        min_length=5,
+        max_length=20,
+        widget=forms.TextInput(),
     )
 
     def clean_username(self):
@@ -83,21 +126,9 @@ class RegisterForm(BootStrapForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        print(cleaned_data)
-        password = cleaned_data.get("password")
-        password_ensure = cleaned_data.get("password_ensure")
-        if password and password_ensure:
-            if password != password_ensure:
-                self.add_error("password_ensure", "两次密码不一致")
-        email_address = cleaned_data.get("email")
-        verification_code = cleaned_data.get("verification_code")
-        if email_address and verification_code:
-            if not verify_verification_code(email_address, verification_code):
-                self.add_error("verification_code", "验证码错误")
         for key, field in self.fields.items():
-            if key in cleaned_data:
+            if key in cleaned_data and key not in ["password", "password_ensure"]:
                 field.widget.attrs = {"class": "form-control is-valid"}
             else:
                 field.widget.attrs = {"class": "form-control is-invalid"}
-        print(cleaned_data)
         return cleaned_data

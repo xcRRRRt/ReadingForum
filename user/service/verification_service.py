@@ -31,3 +31,12 @@ def verify_verification_code(email: str, verification_code: str) -> bool:
     if verification_code != find_verification_by_email(email)["verification_code"]:
         return False
     return True
+
+
+def delete_verification_code(email: str) -> bool:
+    """
+    删除验证码
+    :param email: 邮箱
+    :return 是否成功
+    """
+    return delete_verification(email)

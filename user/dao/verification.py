@@ -28,7 +28,19 @@ def find_verification_by_email(email: str):
     """
     使用email找到验证码
     :param email: 邮箱
+    :return 验证码文档
     """
     db_handler = get_db_handle(COLLECTION_NAME)
     doc = db_handler.find_one({"email": email})
     return doc
+
+
+def delete_verification(email: str) -> bool:
+    """
+    删除验证码
+    :param email: 邮箱
+    :return 是否成功
+    """
+    db_handler = get_db_handle(COLLECTION_NAME)
+    res = db_handler.delete_one({"email": email})
+    return res.acknowledged

@@ -1,15 +1,17 @@
-from django.http import JsonResponse
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
-from user.forms import LoginForm, RegisterForm, EmailForm, VerifyForm, PasswordForm
+from user.forms import *
 from user.service.userinfo_service import *
-from user.service.verification_service import send_verification_email, delete_verification_code
+from user.service.verification_service import *
 from utils.decorator import login_required
 
 
 # Create your views here.
 
+@login_required
 def userinfo(request):
     return render(request, 'user/userinfo.html')
 
@@ -23,7 +25,7 @@ def login(request):
     form = LoginForm(request.POST)
     if form.is_valid():
         request.session['username'] = form.cleaned_data['username']
-        return render(request, "forum/home.html")
+        return render(request, 'forum/home.html')
     return render(request, 'user/login.html', {'form': form})
 
 
@@ -41,7 +43,7 @@ def register(request):
         delete_verification_code(form.cleaned_data['email'])
         # 设置session
         request.session['username'] = form.cleaned_data['username']
-        return render(request, "forum/home.html")
+        return render(request, 'forum/home.html')
     return render(request, "user/register.html", {"form": form})
 
 
@@ -54,16 +56,16 @@ def verify(request):
     email_form = EmailForm(data={'email': email_address, 'page': request.POST.get("page")})  # 以键值对的形式直接建立email表单
     if email_form.is_valid():
         email_address = email_form.cleaned_data['email']  # 验证
-        res = send_verification_email(email_address)  # 发送验证码
+        send_verification_email(email_address)
         request.session['email'] = email_address
     return JsonResponse(data={"errors": email_form.errors})  # 直接把错误信息到ajax的success函数
 
 
 @login_required
-def logout(request):
+def logout(request: WSGIRequest):
     """注销"""
     request.session.clear()  # 删除session数据
-    return redirect(reverse("home"))
+    return render(request, "forum/home.html")
 
 
 def reset_password_verify(request):
@@ -76,8 +78,7 @@ def reset_password_verify(request):
     if form.is_valid():
         # 删除数据库存储的验证码
         delete_verification_code(form.cleaned_data['email'])
-        form = PasswordForm()
-        return render(request, "user/reset_password.html", {"form": form})
+        return redirect(reverse("reset"))
     return render(request, "user/reset_password_verify.html", {"form": form})
 
 
@@ -90,7 +91,11 @@ def reset_password(request):
     form = PasswordForm(request.POST)
     if form.is_valid():
         update_password(request.session.get("email"), form.cleaned_data.get("password"))
-        form = LoginForm()
         request.session.clear()
-        return render(request, "user/login.html", {"form": form})
+        return redirect(reverse("login"))
     return render(request, "user/reset_password.html", {"form": form})
+
+
+def profile(request):
+    """编辑用户信息"""
+    return render(request, 'user/userinfo_edit.html')

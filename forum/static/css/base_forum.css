@@ -1,0 +1,20 @@
+#forum-title:hover {
+    color: black;
+}
+
+#forum-title {
+    color: gray;
+    transition: color ease 0.25s;
+}
+
+.dropdown-menu {
+    min-width: 6rem;
+}
+
+#navbar-container {
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    top: 0;
+    background-color: white
+}

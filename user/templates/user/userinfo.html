@@ -1,5 +1,23 @@
-{% extends 'base_forum.html' %}
+{% extends 'base_userinfo.html' %}
+{% load static %}
 
-{% block content %}
-  <h1>用户信息</h1>
+{% block userinfo_content %}
+  <link rel="stylesheet" href="{% static 'css/userinfo.css' %}">
+  <div id="username" class="mt-5">
+    {{ request.session.username }}
+  </div>
+  <div class="d-flex justify-content-center mt-2">
+    <div class="stat mx-5">
+      <div><a href="#">999</a></div>
+      <div>读过</div>
+    </div>
+    <div class="stat mx-5">
+      <div><a href="#">0</a></div>
+      <div>主题</div>
+    </div>
+    <div class="stat mx-5">
+      <div><a href="#">0</a></div>
+      <div>回复</div>
+    </div>
+  </div>
 {% endblock %}

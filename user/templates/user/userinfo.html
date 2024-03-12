@@ -6,7 +6,7 @@
   <div id="username" class="mt-5">
     {{ request.session.username }}
   </div>
-  <div class="d-flex justify-content-center mt-2">
+  <div class="d-flex justify-content-center mt-3">
     <div class="stat mx-5">
       <div><a href="#">999</a></div>
       <div>读过</div>
@@ -19,5 +19,10 @@
       <div><a href="#">0</a></div>
       <div>回复</div>
     </div>
+  </div>
+  <div id="info" class="mt-5 text-center" style="font-weight: 200;font-size: 10px">
+    注册时间 <span style="font-weight: 800">{{ register_time }}</span>
+    <br>
+    邮箱 <span style="font-weight: 800">{{ email }}</span>
   </div>
 {% endblock %}

@@ -132,3 +132,9 @@ EMAIL_HOST_USER = '479250392@qq.com'
 EMAIL_HOST_PASSWORD = 'veflpemnegqccbbc'
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+if __name__ == "__main__":
+    print(MEDIA_ROOT)

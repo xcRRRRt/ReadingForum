@@ -1,2 +1,99 @@
 {% extends 'base_userinfo.html' %}
+{% load static %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'userinfo' %}">{{ request.session.username }}</a></li>
+  <li class="breadcrumb-item" aria-current="page">编辑</li>
+{% endblock %}
+{% block userinfo_content %}
+  <div class="container">
+    <div class="mx-5">
+      <div class="row">
+
+        <div class="col-2">
+          <div class="d-flex flex-column justify-content-center">
+            <img id="avatar" class="mx-auto" style="display: block" src="
+
+
+
+
+
+
+
+
+
+
+                {% if request.session.avatar_url %}{{ request.session.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                 alt="用户头像">
+            <div id="edit-btn-group" class="btn-group-vertical px-3 mt-4">
+              <button type="button" class="btn py-2 text-secondary rounded-0" data-bs-toggle="modal"
+                      data-bs-target="#edit-avatar">修改头像
+              </button>
+              <!-- 模态 -->
+              <div class="modal" id="edit-avatar">
+                <div class="modal-dialog">
+                  <div class="modal-content rounded-0">
+
+                    <!-- 模态标题 -->
+                    <div class="modal-header">
+                      <h4 class="modal-title">修改头像</h4>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <!-- 模态主体 -->
+                    <div class="modal-body">
+                      {# 上传文件一定要加enctype!!! #}
+                      <form id="edit-avatar-form" enctype="multipart/form-data" action="{% url 'edit_avatar' %}"
+                            method="post">
+                        {% csrf_token %}
+                        {{ edit_avatar_form.as_div }}
+                      </form>
+                    </div>
+
+                    <!-- 模态页脚 -->
+                    <div class="modal-footer">
+                      <button type="submit" id="submit-edit-avatar" form="edit-avatar-form"
+                              class="btn btn-primary rounded-0">保存
+                      </button>
+                      <button type="button" class="btn btn-danger rounded-0" data-bs-dismiss="modal">关闭</button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+              {#              <button type="button" class="btn py-2 text-secondary rounded-0">修改邮箱</button>#}
+              <button type="button" class="btn py-2 text-secondary rounded-0"
+                      onclick="window.location.href='{% url 'reset_verify' %}'">修改密码
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-5">
+          <form id="userinfo-form" action="{% url 'edit_userinfo' %}" method="post">
+            {% csrf_token %}
+            {{ userinfo_form.as_div }}
+            <button type="submit" class="btn btn-primary" form="userinfo-form">保存</button>
+          </form>
+        </div>
+
+        <div class="col-5">
+          <label class="form-label">地址: </label>
+          <span class="text-muted float-end">记得保存</span>
+          <div id="addr-container" class="mb-3">
+            {% if addresses %}
+              {% for address in addresses %}
+                <div class="input-group mt-2">
+                  <input type="text" class="form-control" value="{{ address }}" placeholder="输入一个新的地址">
+                  <button class="btn btn-outline-danger" type="button">删除</button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <button id="save-addr" class="btn btn-primary float-end">保存</button>
+          <button id="add-address" class="btn btn-outline-primary float-end me-2">添加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

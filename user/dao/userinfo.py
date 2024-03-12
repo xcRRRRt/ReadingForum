@@ -3,29 +3,18 @@ from utils.dbconnect import get_db_handle
 COLLECTION_NAME = "userinfo"
 
 
-def find_user_by_username(username):
+def find_userinfo(_filter: dict):
     """
-    使用唯一的用户名查询一个用户
-    :param username: 用户名
+    查询用户
+    :param _filter: 过滤器，例：{'username': 'xxx', 'email': 'xxx'}
     :return 用户文档
     """
     db_handle = get_db_handle(COLLECTION_NAME)
-    doc = db_handle.find_one({"username": username})
+    doc = db_handle.find_one(filter=_filter)
     return doc
 
 
-def find_user_by_email(email: str):
-    """
-    通过唯一的邮箱查询用户
-    :param email: 邮箱
-    :return 用户文档
-    """
-    db_handle = get_db_handle(COLLECTION_NAME)
-    doc = db_handle.find_one({"email": email})
-    return doc
-
-
-def insert_one_user_info(**kwargs) -> bool:
+def insert_one_userinfo(**kwargs) -> bool:
     """
     插入一条记录，支持嵌套文档和数组
     请以键值对的方式传参
@@ -41,18 +30,26 @@ def insert_one_user_info(**kwargs) -> bool:
     return result.acknowledged
 
 
-def update_user(_username: str = None, _email: str = None, **kwargs) -> bool:
+def update_userinfo(_filter: dict, **kwargs) -> bool:
     """
     更新用户信息，以用户名或者邮箱作为查询条件
-    :param _username: 用户名
-    :param _email: 邮箱
+    :param _filter: 过滤器，例：{'username': 'xxx', 'email': 'xxx'}
     :param kwargs: 需要更新的数据
     :return 是否成功
     """
     db_handle = get_db_handle(COLLECTION_NAME)
-    if _username:
-        res = db_handle.update_one({"username": _username}, {"$set": kwargs})
-        return res.acknowledged
-    if _email:
-        res = db_handle.update_one({"email": _email}, {"$set": kwargs})
-        return res.acknowledged
+    res = db_handle.update_one(filter=_filter, update={"$set": kwargs})
+    return res.acknowledged
+
+
+def delete_field(_filter: dict, fields: list) -> bool:
+    """
+    删除字段
+    :param _filter: 过滤器
+    :param fields: 要删除的字段名
+    :return bool: 是否成功
+    """
+    db_handle = get_db_handle(COLLECTION_NAME)
+    unset_fields = {field: 1 for field in fields}
+    res = db_handle.update_one(filter=_filter, update={"$unset": unset_fields})
+    return res.acknowledged

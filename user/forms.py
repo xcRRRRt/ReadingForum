@@ -132,3 +132,29 @@ class RegisterForm(PasswordForm, VerifyForm):
             else:
                 field.widget.attrs = {"class": "form-control is-invalid"}
         return cleaned_data
+
+
+class AvatarUploadForm(forms.Form):
+    avatar = forms.ImageField(
+        label="选择头像",
+        validators=[validators.validate_image_file_extension],
+    )
+
+
+class UserInfoForm(forms.Form):
+    full_name = forms.CharField(
+        required=False,
+        label="全名",
+        max_length=20
+    )
+    birthday = forms.DateField(
+        required=False,
+        label="生日",
+        widget=forms.TextInput(attrs={'type': 'date'})
+    )
+    introduction = forms.CharField(
+        required=False,
+        label="个人简介",
+        max_length=500,
+        widget=forms.Textarea(attrs={'rows': 5, 'cols': 20})
+    )

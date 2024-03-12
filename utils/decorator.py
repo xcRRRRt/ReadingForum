@@ -1,8 +1,6 @@
 # 装饰器
 
 from django.core.handlers.wsgi import WSGIRequest
-from django.shortcuts import render, redirect
-from django.urls import reverse
 from django.http import HttpResponseRedirect
 
 

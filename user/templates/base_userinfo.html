@@ -5,7 +5,7 @@
   <div id="userinfo-bg-container">
     <img src="{% static 'img/default_userinfo_cover.svg' %}" alt="你老公张磊">
     <div id="avatar-wrapper">
-      <img src="{% static 'img/default_avatar.svg' %}" alt="用户头像">
+      <img id="avatar" src="{% if request.session.avatar_url %}{{ request.session.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}" alt="用户头像">
     </div>
   </div>
   <div class="container">
@@ -13,8 +13,9 @@
       <nav aria-label="breadcrumb">
         <ul class="breadcrumb">
           <li class="breadcrumb-item"><a href="{% url 'home' %}">首页</a></li>
-          <li class="breadcrumb-item" aria-current="page">{{ request.session.username }}</li>
-          {% block breadcrumb %}{% endblock %}
+          {% block breadcrumb %}
+            <li class="breadcrumb-item">{{ request.session.username }}</li>
+          {% endblock %}
         </ul>
       </nav>
     </div>

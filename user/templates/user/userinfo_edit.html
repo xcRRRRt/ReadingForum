@@ -13,16 +13,6 @@
         <div class="col-2">
           <div class="d-flex flex-column justify-content-center">
             <img id="avatar" class="mx-auto" style="display: block" src="
-
-
-
-
-
-
-
-
-
-
                 {% if request.session.avatar_url %}{{ request.session.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                  alt="用户头像">
             <div id="edit-btn-group" class="btn-group-vertical px-3 mt-4">
@@ -70,10 +60,10 @@
         </div>
 
         <div class="col-5">
-          <form id="userinfo-form" action="{% url 'edit_userinfo' %}" method="post">
+          <form id="userinfo-form">
             {% csrf_token %}
             {{ userinfo_form.as_div }}
-            <button type="submit" class="btn btn-primary" form="userinfo-form">保存</button>
+            <button type="button" id="submit-profile" class="btn btn-primary">保存</button>
           </form>
         </div>
 

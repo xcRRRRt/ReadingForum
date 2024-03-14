@@ -15,14 +15,40 @@ $(document).ready(function () {
         parentElement.attr("class", "mb-3");
     });
 
+
+    $("#submit-profile").click(function () {
+        alert(1);
+        $.ajax({
+            url: '/user/edit-userinfo/',
+            type: 'post',
+            headers: {
+                'X-CSRFToken': csrfToken  // Include the CSRF token in the headers
+            },
+            data: {
+                "full_name": $("#id_full_name").val(),
+                "birthday": $("#id_birthday").val(),
+                "introduction": $("#id_introduction").val()
+            },
+            success: function (res) {
+                if (res.success) {
+                    show_toast("bg-info", "信息", "", "保存成功");
+                } else {
+                    show_toast("text-bg-danger", "信息", "", "保存失败");
+                }
+            }
+        });
+    });
+
+
+    // 右边部分的地址，点击添加按钮添加一个输入，点击删除按钮删除一个输入，点击保存进行保存
+    let addr_container = $("#addr-container");
+    addr_container.find("button").click(remove);
+
     function remove() {
         let container = $(this).parent();
         container.remove();
     }
 
-    // 右边部分的地址，点击添加按钮添加一个输入，点击删除按钮删除一个输入，点击保存进行保存
-    let addr_container = $("#addr-container");
-    addr_container.find("button").click(remove);
     $("#add-address").click(function () {
         const input = $("<input type=\"text\" class=\"form-control\" placeholder=\"输入一个新的地址\">");
         const delete_btn = $("<button class=\"btn btn-outline-danger\" type=\"button\">删除</button>");
@@ -55,24 +81,22 @@ $(document).ready(function () {
                 },
                 success: function (res) {
                     if (res.success) {
-                        const toastLive = $("#liveToast");
-                        toastLive.find(".toast-header").removeClass().addClass("toast-header bg-info");
-                        toastLive.find("strong").text("信息");
-                        toastLive.find("small").text("");
-                        toastLive.find(".toast-body").text("保存成功");
-                        const toast = new bootstrap.Toast(toastLive);
-                        toast.show();
+                        show_toast("bg-info", "信息", "", "保存成功");
                     } else {
-                        const toastLive = $("#liveToast");
-                        toastLive.find(".toast-header").removeClass().addClass("toast-header bg-danger");
-                        toastLive.find("strong").text("信息");
-                        toastLive.find("small").text("");
-                        toastLive.find(".toast-body").text("保存识别");
-                        const toast = new bootstrap.Toast(toastLive);
-                        toast.show();
+                        show_toast("text-bg-danger", "信息", "", "保存失败");
                     }
                 }
             });
         }
     });
 });
+
+function show_toast(head_bg_class, strong_text, small_text, body_text) {
+    const toastLive = $("#liveToast");
+    toastLive.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
+    toastLive.find("strong").text(strong_text);
+    toastLive.find("small").text(small_text);
+    toastLive.find(".toast-body").text(body_text);
+    const toast = new bootstrap.Toast(toastLive);
+    toast.show();
+}

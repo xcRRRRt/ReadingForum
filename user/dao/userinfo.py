@@ -1,4 +1,5 @@
 from utils.dbconnect import get_db_handle
+from pymongo.errors import PyMongoError
 
 COLLECTION_NAME = "userinfo"
 
@@ -9,9 +10,13 @@ def find_userinfo(_filter: dict):
     :param _filter: 过滤器，例：{'username': 'xxx', 'email': 'xxx'}
     :return 用户文档
     """
-    db_handle = get_db_handle(COLLECTION_NAME)
-    doc = db_handle.find_one(filter=_filter)
-    return doc
+    try:
+        db_handle = get_db_handle(COLLECTION_NAME)
+        doc = db_handle.find_one(filter=_filter)
+        return doc
+    except PyMongoError as e:
+        print(f"An error occurred while finding user info: {e}")
+        return None
 
 
 def insert_one_userinfo(**kwargs) -> bool:
@@ -25,9 +30,13 @@ def insert_one_userinfo(**kwargs) -> bool:
     :param kwargs: 键值对数据，值支持数组和字典
     :return 是否插入成功
     """
-    db_handle = get_db_handle(COLLECTION_NAME)
-    result = db_handle.insert_one(kwargs)
-    return result.acknowledged
+    try:
+        db_handle = get_db_handle(COLLECTION_NAME)
+        result = db_handle.insert_one(kwargs)
+        return result.acknowledged
+    except PyMongoError as e:
+        print(f"An error occurred while inserting user info: {e}")
+        return False
 
 
 def update_userinfo(_filter: dict, **kwargs) -> bool:
@@ -37,9 +46,13 @@ def update_userinfo(_filter: dict, **kwargs) -> bool:
     :param kwargs: 需要更新的数据
     :return 是否成功
     """
-    db_handle = get_db_handle(COLLECTION_NAME)
-    res = db_handle.update_one(filter=_filter, update={"$set": kwargs})
-    return res.acknowledged
+    try:
+        db_handle = get_db_handle(COLLECTION_NAME)
+        res = db_handle.update_one(filter=_filter, update={"$set": kwargs})
+        return res.acknowledged
+    except PyMongoError as e:
+        print(f"An error occurred while updating user info: {e}")
+        return False
 
 
 def delete_field(_filter: dict, fields: list) -> bool:
@@ -49,7 +62,11 @@ def delete_field(_filter: dict, fields: list) -> bool:
     :param fields: 要删除的字段名
     :return bool: 是否成功
     """
-    db_handle = get_db_handle(COLLECTION_NAME)
-    unset_fields = {field: 1 for field in fields}
-    res = db_handle.update_one(filter=_filter, update={"$unset": unset_fields})
-    return res.acknowledged
+    try:
+        db_handle = get_db_handle(COLLECTION_NAME)
+        unset_fields = {field: 1 for field in fields}
+        res = db_handle.update_one(filter=_filter, update={"$unset": unset_fields})
+        return res.acknowledged
+    except PyMongoError as e:
+        print(f"An error occurred while deleting field: {e}")
+        return False

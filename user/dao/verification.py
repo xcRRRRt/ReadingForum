@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pymongo.errors import PyMongoError
 
 from utils.dbconnect import get_db_handle
 
@@ -12,16 +13,20 @@ def upsert_verification_code(email: str, verification_code: str) -> bool:
     :param verification_code: 验证码
     :return 是否成功
     """
-    db_handler = get_db_handle(COLLECTION_NAME)
-    res = db_handler.update_one(
-        filter={"email": email},
-        update={"$set": {
-            "verification_code": verification_code,
-            "timestamp": datetime.now(timezone.utc)
-        }},
-        upsert=True
-    )
-    return res.acknowledged
+    try:
+        db_handler = get_db_handle(COLLECTION_NAME)
+        res = db_handler.update_one(
+            filter={"email": email},
+            update={"$set": {
+                "verification_code": verification_code,
+                "timestamp": datetime.now(timezone.utc)
+            }},
+            upsert=True
+        )
+        return res.acknowledged
+    except PyMongoError as e:
+        print(f"An error occurred while upserting verification code: {e}")
+        return False
 
 
 def find_verification_by_email(email: str):
@@ -30,9 +35,13 @@ def find_verification_by_email(email: str):
     :param email: 邮箱
     :return 验证码文档
     """
-    db_handler = get_db_handle(COLLECTION_NAME)
-    doc = db_handler.find_one({"email": email})
-    return doc
+    try:
+        db_handler = get_db_handle(COLLECTION_NAME)
+        doc = db_handler.find_one({"email": email})
+        return doc
+    except PyMongoError as e:
+        print(f"An error occurred while finding verification by email: {e}")
+        return None
 
 
 def delete_verification(email: str) -> bool:
@@ -41,6 +50,10 @@ def delete_verification(email: str) -> bool:
     :param email: 邮箱
     :return 是否成功
     """
-    db_handler = get_db_handle(COLLECTION_NAME)
-    res = db_handler.delete_one({"email": email})
-    return res.acknowledged
+    try:
+        db_handler = get_db_handle(COLLECTION_NAME)
+        res = db_handler.delete_one({"email": email})
+        return res.acknowledged
+    except PyMongoError as e:
+        print(f"An error occurred while deleting verification: {e}")
+        return False

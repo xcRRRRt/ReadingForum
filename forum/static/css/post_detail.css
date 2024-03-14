@@ -1,0 +1,61 @@
+#post-title {
+    font-size: 26px;
+    font-weight: bold;
+    line-height: 1.1;
+    word-wrap: break-word;
+    color: #494949;
+}
+
+#post-detail {
+    /* Font */
+    /* Emoji fonts are added to visualise them nicely in Internet Explorer. */
+    font-family: sans-serif, Arial, Verdana, "Trebuchet MS", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 13px;
+
+    /* Text color */
+    color: #333;
+
+    /* Remove the background color to make it transparent. */
+    background-color: #fff;
+
+    margin: 20px;
+}
+
+#post-detail h1, h2, h3, h4, h5, h6 {
+    font-family: sans-serif, Arial, Verdana, "Trebuchet MS", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+#post-detail h1 {
+    font-size: 2em;
+}
+
+#post-detail h2 {
+    font-size: 1.5em;
+}
+
+#post-detail h3 {
+    font-size: 1.17em;
+}
+
+#post-detail h4 {
+    font-size: 1em;
+}
+
+#post-detail h5 {
+    font-size: 0.83em;
+}
+
+#post-detail h6 {
+    font-size: 0.67em;
+}
+
+#post-detail blockquote {
+    padding: 2px 8px 2px 20px;
+    margin: 13px 40px;
+    border-width: 0;
+    border-left-width: 5px;
+    font-style: italic;
+    font-family: Georgia, Times, "Times New Roman", serif;
+    border-style: solid;
+    border-color: #ccc;
+}

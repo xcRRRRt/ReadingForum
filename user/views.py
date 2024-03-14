@@ -162,12 +162,12 @@ def edit_avatar(request):
 @login_required
 def edit_userinfo(request):
     """编辑用户信息"""
-    form = UserInfoForm(request.POST)
+    data = request.POST
+    form = UserInfoForm(data)
     if form.is_valid():
         update_user_info(request.session.get("username"), **form.cleaned_data)
-    addresses = get_addresses(request.session.get("username"))
-    return render(request, "user/userinfo_edit.html",
-                  {"edit_avatar_form": AvatarUploadForm(), "userinfo_form": form, "addresses": addresses})
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "errors": form.errors})
 
 
 @login_required

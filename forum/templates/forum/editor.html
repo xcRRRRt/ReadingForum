@@ -1,21 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>发布主题</title>
-  <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
-</head>
-<body>
-<h1>Classic editor</h1>
-<div id="editor">
-  <p>This is some sample content.</p>
-</div>
-<script>
-    ClassicEditor
-        .create(document.querySelector('#editor'))
-        .catch(error => {
-            console.error(error);
-        });
-</script>
-</body>
-</html>
+{% extends 'base_forum.html' %}
+
+{% block content %}
+  <div class="container">
+    <div class="mx-5">
+      <div class="row">
+
+        <div class="col-8">
+          <div class="d-flex justify-content-between align-items-center">
+            <h1>发布内容</h1>
+            <button id="ckeditor-submit" form="ckeditor-form" class="btn btn-primary" type="submit">发布</button>
+          </div>
+          <div id="editor">
+            <form id="ckeditor-form" action="{% url 'editor' %}" method="post">
+              {% csrf_token %}
+              <div class="form-group">
+                <div>
+                  {{ form.media }}
+                  {{ form.content }}
+                  <div id="editor-invalid-feedback" style="display: none">
+                    {{ form.content.errors.0 }}
+                  </div>
+                </div>
+              </div>
+              {{ form.title }}
+              {{ form.labels }}
+            </form>
+          </div>
+        </div>
+
+        <div class="col-4">
+          <div class="mt-5 mb-2">
+            <label class="form-label">标题</label>
+            <input id="post-title" class="form-control" type="text" maxlength="30" placeholder="文章标题" required>
+            <div class="invalid-feedback"></div>
+          </div>
+          <label class="form-label">添加标签</label>
+          <div class="input-group">
+            <input class="form-control" type="text" maxlength="30" placeholder="输入文章关联的标签呦" required>
+            <button id="label-add" type="button" class="btn btn-outline-primary">添加</button>
+          </div>
+          <div id="labels-chosen" class="d-flex flex-wrap mt-3"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+{% endblock %}

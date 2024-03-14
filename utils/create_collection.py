@@ -24,3 +24,10 @@ if __name__ == "__main__":
         # 为username和email创建唯一索引
         res = collection.create_index([("username", 1), ("email", 1)], unique=True)
         print(f"{collection_name}的索引\n{res}")
+
+    # Post帖子collection
+    collection_name = "post"
+    if collection_name not in db.list_collection_names():
+        collection = db.create_collection(collection_name)
+
+    print()

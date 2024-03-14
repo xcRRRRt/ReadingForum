@@ -1,0 +1,9 @@
+#labels-chosen button {
+    background: none;
+    border: none;
+    opacity: 50%;
+}
+
+#labels-chosen button:hover {
+    opacity: 100%;
+}

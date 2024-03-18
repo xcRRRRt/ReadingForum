@@ -1,0 +1,39 @@
+{% extends 'base_userinfo_other_user.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'userinfo_other' userinfo.username %}">{{ userinfo.username }}</a></li>
+  <li class="breadcrumb-item" aria-current="page">个人信息</li>
+{% endblock %}
+
+{% block userinfo_content %}
+  <script>
+      $(document).ready(function () {
+          $("#userinfo-form input, #userinfo-form textarea").prop("disabled", true);
+      });
+  </script>
+
+  <div class="container">
+    <div class="mx-5">
+      <div class="row">
+
+        <div class="col-2">
+          <div class="d-flex flex-column justify-content-center">
+            <img id="avatar" class="mx-auto" style="display: block" src="
+                {% if userinfo.avatar_url %}{{ userinfo.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                 alt="用户头像">
+          </div>
+        </div>
+
+        <div class="col-5">
+          <form id="userinfo-form">
+            {% csrf_token %}
+            {{ userinfo_form.as_div }}
+          </form>
+        </div>
+
+        <div class="col-5"></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

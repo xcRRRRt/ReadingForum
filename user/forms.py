@@ -24,7 +24,8 @@ class LoginForm(BootStrapForm):
 
     def clean_username(self):
         username = self.cleaned_data["username"]
-        if not is_user_exist(username):
+        userinfo_service = UserInfoService()
+        if not userinfo_service.is_user_exist(username):
             raise forms.ValidationError("未找到用户")
         return username
 
@@ -32,8 +33,9 @@ class LoginForm(BootStrapForm):
         cleaned_data = super().clean()
         username = cleaned_data.get("username")
         password = cleaned_data.get("password")
+        userinfo_service = UserInfoService()
         if username and password:
-            if not is_password_correct(username, password):
+            if not userinfo_service.is_password_correct(username, password):
                 raise forms.ValidationError("密码错误")
         return cleaned_data
 
@@ -50,14 +52,15 @@ class EmailForm(BootStrapForm):
         cleaned_data = super().clean()
         email = cleaned_data.get("email")
         page = cleaned_data.get("page")
+        userinfo_service = UserInfoService()
         if not page:
             cleaned_data.setdefault("page", "/user/reset_verify")
         if email and page:
             if "register" in page:  # 如果是注册页面的话
-                if is_email_exist(email):
+                if userinfo_service.is_email_exist(email):
                     self.add_error("email", "邮箱已被使用")
             else:
-                if not is_email_exist(email):
+                if not userinfo_service.is_email_exist(email):
                     self.add_error("email", "邮箱不在数据库中，请确认使用了正确的邮箱")
         return cleaned_data
 
@@ -72,8 +75,9 @@ class VerifyForm(EmailForm):
         cleaned_data = super().clean()
         email_address = cleaned_data.get("email")
         verification_code = cleaned_data.get("verification_code")
+        verification_service = VerificationService()
         if email_address and verification_code:
-            if not verify_verification_code(email_address, verification_code):
+            if not verification_service.verify_verification_code(email_address, verification_code):
                 self.add_error("verification_code", "验证码错误")
         for key, field in self.fields.items():
             if key in cleaned_data and key not in ["password", "password_ensure"]:
@@ -119,8 +123,9 @@ class RegisterForm(PasswordForm, VerifyForm):
     )
 
     def clean_username(self):
+        userinfo_service = UserInfoService()
         username = self.cleaned_data.get("username")
-        if is_user_exist(username):
+        if userinfo_service.is_user_exist(username):
             raise forms.ValidationError("用户名重复")
         return username
 

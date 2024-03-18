@@ -1,8 +1,15 @@
+#username, #introduction-show, #info {
+    color: #6c757d
+}
+
 #username {
     text-align: center;
     font-size: 32px;
     font-weight: 300;
-    color: #6c757d
+}
+
+#introduction-shown {
+    font-weight: lighter;
 }
 
 .stat {
@@ -16,16 +23,26 @@
 }
 
 .stat a {
-    color: #337ab7;
+    color: rgb(51, 122, 183);
     text-decoration: none;
 }
 
 .stat a:hover {
-    color: #135990;
-    text-decoration: #135990;
+    color: rgb(35, 82, 124);
+    text-decoration: underline rgb(35, 82, 124);
 }
 
 .stat div:last-child {
     font-weight: 200;
     font-size: 12px;
+}
+
+#info {
+    font-weight: 200;
+    font-size: 10px
+}
+
+#info span {
+    font-weight: 800;
+    color: black;
 }

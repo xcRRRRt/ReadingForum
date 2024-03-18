@@ -1,16 +1,49 @@
 {% extends 'base_forum.html' %}
+{% load static %}
 {% block content %}
+  {% csrf_token %}
   <div class="container">
     <div class="mx-5">
       <div class="row">
-        <div id="post-detail" class="col-8 p-5 pt-4">
+        <div id="post-detail" class="col-8 p-5 pt-0">
           <h1 id="post-title">{{ post.title }}</h1>
+          {# 作者信息 #}
+          <div id="author-info" class="d-flex my-3">
+            <img id="post-avatar"
+                 src="{% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                 alt="头像">
+            <div class="ms-3">
+              <a href="{% url 'userinfo_other' post.author %}">
+                {{ post.author }}
+              </a>
+              <div class="text-secondary">
+                {{ time }}
+              </div>
+            </div>
+          </div>
+
+          {# 文章内容 #}
           <div id="post-content">
             {{ post.content|safe }}
           </div>
+          
+          {# 赞和踩 #}
+          <div id="post-like" class="{% if user_post_like %}border-danger-subtle{% endif %} d-flex justify-content-center pt-5">
+            <div id="post-like-button" class="d-flex me-2 border py-1 px-3 {% if user_post_like %}border-danger-subtle{% endif %}">
+              <div>赞&nbsp;</div>
+              <img src="{% if user_post_like %}{% static 'img/like_red.svg' %}{% else %}{% static 'img/like.svg' %}{% endif %}"
+                   alt="like">&nbsp;
+              <span>{{ true }}</span>
+            </div>
+            <div id="post-unlike-button" class="d-flex ms-2 border py-1 px-3 {% if user_post_unlike %}border-danger-subtle{% endif %}">
+              <div>踩&nbsp;</div>
+              <img src="{% if user_post_unlike %}{% static 'img/unlike_red.svg' %}{% else %}{% static 'img/unlike.svg' %}{% endif %}" alt="unlike">&nbsp;
+              <span>{{ false }}</span>
+            </div>
+          </div>
         </div>
-        <div class="col-4"></div>
       </div>
+      <div class="col-4"></div>
     </div>
   </div>
 {% endblock %}

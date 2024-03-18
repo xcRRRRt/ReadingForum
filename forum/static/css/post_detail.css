@@ -10,7 +10,7 @@
     /* Font */
     /* Emoji fonts are added to visualise them nicely in Internet Explorer. */
     font-family: sans-serif, Arial, Verdana, "Trebuchet MS", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    font-size: 13px;
+    font-size: 14px;
 
     /* Text color */
     color: #333;
@@ -58,4 +58,26 @@
     font-family: Georgia, Times, "Times New Roman", serif;
     border-style: solid;
     border-color: #ccc;
+}
+
+#post-avatar {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#post-like img {
+    height: 20px;
+    width: 20px;
+}
+
+#author-info a {
+    color: rgb(51, 122, 183);
+    text-decoration: none;
+}
+
+#author-info a:hover {
+    color: rgb(35, 82, 124);
+    /*text-decoration: underline rgb(35, 82, 124);*/
 }

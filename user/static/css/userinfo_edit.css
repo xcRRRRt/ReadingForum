@@ -5,3 +5,12 @@
 #edit-btn-group button:hover {
     background-color: #eeeeee;
 }
+
+#userinfo-form label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#userinfo-form input, #userinfo-form textarea {
+    background-color: white;
+}

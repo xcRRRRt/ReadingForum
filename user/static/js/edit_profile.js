@@ -17,7 +17,6 @@ $(document).ready(function () {
 
 
     $("#submit-profile").click(function () {
-        alert(1);
         $.ajax({
             url: '/user/edit-userinfo/',
             type: 'post',

@@ -13,8 +13,10 @@
   <script src="{% static 'js/breadcrumb.js' %}"></script>
   <script src="{% static 'js/edit_profile.js' %}"></script>
   <script src="{% static 'js/editor.js' %}"></script>
+  <script src="{% static 'js/post_detail.js' %}"></script>
   <link rel="stylesheet" href="{% static 'css/breadcrumb_link.css' %}">
   <link rel="stylesheet" href="{% static 'css/base_forum.css' %}">
+  <link rel="stylesheet" href="{% static 'css/userinfo.css' %}">
   <link rel="stylesheet" href="{% static 'css/userinfo_edit.css' %}">
   <link rel="stylesheet" href="{% static 'css/editor.css' %}">
   <link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
@@ -38,12 +40,7 @@
       {% if request.session.username %}
         <div class="dropdown">
           <button type="button" class="btn dropdown-toggle" style="border: none" data-bs-toggle="dropdown">
-            <img id="avatar" style="width: 27px;height: 27px" src="
-                
-                
-                
-                
-                {% if request.session.avatar_url %}{{ request.session.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+            <img id="avatar" style="width: 27px;height: 27px" src="{% if request.session.avatar_url %}{{ request.session.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                  alt="用户头像">
             {{ request.session.username }}
           </button>

@@ -24,11 +24,11 @@ $(document).ready(function () {
         }
     });
 
-    // TODO 文章标签可以全都混到表单里的隐藏字段里，
+    // 发布文章
     $("#ckeditor-submit").click(function (event) {
         event.preventDefault();
         // 标题
-        let title_input = $("#post-title");
+        let title_input = $("#editor-post-title");
         let title = title_input.val().trim();
         if (title.length < 5 || title.length > 30) {
             title_input.attr("class", "form-control is-invalid");

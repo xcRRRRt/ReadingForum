@@ -5,7 +5,7 @@ from pymongo import MongoClient
 if __name__ == "__main__":
     # 连接 MongoDB 数据库
     client = MongoClient(host="mongodb://localhost", port=27017)
-    db = client['readinigforum']
+    db = client['readingforum']
 
     # 验证码collection
     collection_name = 'verification'
@@ -27,6 +27,12 @@ if __name__ == "__main__":
 
     # Post帖子collection
     collection_name = "post"
+    if collection_name not in db.list_collection_names():
+        collection = db.create_collection(collection_name)
+
+    print()
+    # 书籍collection
+    collection_name = "book"
     if collection_name not in db.list_collection_names():
         collection = db.create_collection(collection_name)
 

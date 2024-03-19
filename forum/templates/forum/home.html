@@ -5,4 +5,5 @@
   <h1>测试</h1>
   <h1>论坛首页</h1>
   <h2>用户: {{ request.session.username }}</h2>
+  <h2>是否为管理员：{{ request.session.is_admin }}</h2>
 {% endblock %}

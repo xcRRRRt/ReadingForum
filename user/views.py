@@ -10,7 +10,7 @@ from readingforum.settings import MEDIA_ROOT, MEDIA_URL
 from user.forms import *
 from user.service.userinfo_service import *
 from user.service.verification_service import *
-from utils.decorator import login_required
+from utils.view_decorator import AuthRequired
 
 # Create your views here.
 userinfo_service = UserInfoService()
@@ -26,10 +26,17 @@ class LoginView(views.View):
         form = LoginForm(request.POST)
         if form.is_valid():
             request.session['username'] = form.cleaned_data['username']
-            request.session['avatar_url'] = userinfo_service.find_userinfo_by_username(
+            user = userinfo_service.find_userinfo_by_username(
                 form.cleaned_data['username'],
-                'avatar_url'
-            ).get("avatar_url")
+                "admin", "avatar_url"
+            )
+            request.session['avatar_url'] = user.get("avatar_url")
+            if user.get("admin"):
+                request.session['is_admin'] = True
+            # request.session['avatar_url'] = userinfo_service.find_userinfo_by_username(
+            #     form.cleaned_data['username'],
+            #     'avatar_url'
+            # ).get("avatar_url")
             return render(request, 'forum/home.html')
         return render(request, 'user/login.html', {'form': form})
 
@@ -69,14 +76,14 @@ class VerifyView(views.View):
         return JsonResponse(data={"errors": email_form.errors})  # 直接把错误信息到ajax的success函数
 
 
-@login_required
+@AuthRequired.login_required()
 def logout(request: WSGIRequest):
     """注销"""
     request.session.clear()  # 删除session数据
     return render(request, "forum/home.html")
 
 
-@login_required
+@AuthRequired.login_required()
 def reset_password_verify(request):
     """重置密码的验证"""
     if request.method == 'GET':
@@ -91,7 +98,7 @@ def reset_password_verify(request):
     return render(request, "user/reset_password_verify.html", {"form": form})
 
 
-@login_required
+@AuthRequired.login_required()
 def reset_password(request):
     """重置密码"""
     if request.method == 'GET':
@@ -106,7 +113,7 @@ def reset_password(request):
     return render(request, "user/reset_password.html", {"form": form})
 
 
-@login_required
+@AuthRequired.login_required()
 def userinfo(request):
     """用户个人中心"""
     email = userinfo_service.get_email(request.session.get('username'))
@@ -124,7 +131,7 @@ def userinfo_other(request, username):
     return render(request, 'user/userinfo_other_user.html', {"userinfo": user, "register_time": register_time})
 
 
-@login_required
+@AuthRequired.login_required()
 def profile(request):
     """编辑用户信息，GET方法，下面的两个函数都是用来验证的，都是POST"""
     edit_avatar_form = AvatarUploadForm()  # 上传头像表单
@@ -155,7 +162,7 @@ def profile_other(request, username):
     return render(request, 'user/userinfo_no_edit_other_user.html', {"userinfo": user, "userinfo_form": userinfo_form})
 
 
-@login_required
+@AuthRequired.login_required()
 def edit_avatar(request):
     """编辑头像"""
     form = AvatarUploadForm(request.POST, request.FILES)
@@ -201,7 +208,7 @@ def edit_avatar(request):
                   {"edit_avatar_form": form, "userinfo_form": userinfo_form, "addresses": addresses})
 
 
-@login_required
+@AuthRequired.login_required()
 def edit_userinfo(request):
     """编辑用户信息"""
     data = request.POST
@@ -212,7 +219,7 @@ def edit_userinfo(request):
     return JsonResponse({"success": False, "errors": form.errors})
 
 
-@login_required
+@AuthRequired.login_required()
 def save_addresses(request):
     """保存地址"""
     addresses = request.POST.getlist("addresses[]")

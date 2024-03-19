@@ -6,7 +6,7 @@ from django import views
 
 class BookListView(views.View):
     def get(self, request, *args, **kwargs):
-        return render(request, 'book_list.html')
+        return render(request, 'book/book_list.html')
 
     def post(self, request, *args, **kwargs):
         pass

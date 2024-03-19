@@ -29,7 +29,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    # "django.contrib.admin",   # 妈的比当初为什么要想不开拿django做这玩意，而且数据库连接TMD用的还是PyMongo，似了得了
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "user.apps.UserConfig",
     "forum.apps.ForumConfig",
     "book.apps.BookConfig",
+    "admin.apps.AdminConfig",
     'ckeditor',
     'ckeditor_uploader',
 ]

@@ -10,6 +10,7 @@ from readingforum.settings import MEDIA_ROOT, MEDIA_URL
 from user.forms import *
 from user.service.userinfo_service import *
 from user.service.verification_service import *
+from utils.file_utils import save_file
 from utils.view_decorator import AuthRequired
 
 # Create your views here.
@@ -139,7 +140,8 @@ def profile(request):
     fields_name = list(userinfo_form.fields.keys())  # 获取表单字段名
     # 设置表单初始值
     userinfo_form.initial = userinfo_service.find_userinfo_by_username(request.session.get('username'), *fields_name)
-    addresses = userinfo_service.find_userinfo_by_username(request.session.get('username'), 'addresses').get("addresses")
+    addresses = userinfo_service.find_userinfo_by_username(request.session.get('username'), 'addresses').get(
+        "addresses")
     return render(request, 'user/userinfo_edit.html',
                   {"edit_avatar_form": edit_avatar_form, "userinfo_form": userinfo_form, "addresses": addresses})
 
@@ -168,24 +170,8 @@ def edit_avatar(request):
     form = AvatarUploadForm(request.POST, request.FILES)
     if form.is_valid():
         avatar = form.cleaned_data['avatar']
-        ext = os.path.splitext(avatar.name)[-1]  # 文件扩展名
-
-        save_dir = "%s/userinfo/avatar" % MEDIA_ROOT  # 保存的目录的相对路径
-        # 如果目录不存在，创建
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-
-        relative_path = "userinfo/avatar/%s" % (request.session.get("username") + ext)  # 相对路径
-        save_path = os.path.join(MEDIA_ROOT, relative_path)  # 保存到本地的绝对路径
-        url_path = str(os.path.join(MEDIA_URL, relative_path))  # 保存到数据库的url路径
-
-        # 保存
-        with open(save_path, 'wb') as f:
-            # pic.chunks()为图片的一系列数据，它是一一段段的，所以要用for逐个读取
-            for content in avatar.chunks():
-                f.write(content)
+        url_path = save_file(avatar, "userinfo/avatar", request.session.get("username"))
         userinfo_service.update_avatar_url(request.session.get("username"), url_path)  # 保存url路径
-
         # 设置session
         request.session['avatar_url'] = userinfo_service.find_userinfo_by_username(
             request.session.get("username"),
@@ -203,7 +189,8 @@ def edit_avatar(request):
     )
 
     # 地址
-    addresses = userinfo_service.find_userinfo_by_username(request.session.get('username'), 'addresses').get('addresses')
+    addresses = userinfo_service.find_userinfo_by_username(request.session.get('username'), 'addresses').get(
+        'addresses')
     return render(request, "user/userinfo_edit.html",
                   {"edit_avatar_form": form, "userinfo_form": userinfo_form, "addresses": addresses})
 

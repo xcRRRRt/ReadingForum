@@ -1,14 +1,13 @@
 # 装饰器
 import inspect
 
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 
 class AuthRequired:
     """
-    骚凹瑞，这段只是给我一个人看的，这么逆天的屎山，我要铭记一辈子，靴靴
+    这么逆天的屎山，我要铭记一辈子，骚凹瑞
 
 
     django View装饰器，可以装饰类，也可以装饰函数，可以无参，也可以有参

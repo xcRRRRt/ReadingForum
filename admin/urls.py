@@ -4,5 +4,6 @@ from admin import views
 
 urlpatterns = [
     path('', views.AdminIndexView.as_view(), name='admin_index'),
-    path("test/", views.test)
+    path("book/", views.AdminBookView.as_view(), name='admin_book'),
+    path("book/add/", views.AdminBookAddView.as_view(), name='admin_book_add'),
 ]

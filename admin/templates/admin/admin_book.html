@@ -2,4 +2,33 @@
 
 {% block admin_module %}
   <a class="btn btn-outline-success" href="{% url 'admin_book_add' %}">添加</a>
+  <div>图书列表:</div>
+  <table class="table table-hover">
+    <tr class="table-secondary">
+      <th>ISBN</th>
+      <th>书名</th>
+      <th>标签</th>
+      <th>价格</th>
+      <th>操作</th>
+    </tr>
+    {% for book in paginator.get_page %}
+      <tr>
+        <td>{{ book.isbn }}</td>
+        <td>{{ book.title }}</td>
+        <td>{% for tag in book.label %}{{ tag }}{% if not forloop.last %},{% endif %}{% endfor %}</td>
+        <td>{{ book.price }}</td>
+        <td><a href="#">修改</a>/<a href="#">删除</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  {# 分页 #}
+  <ul class="pagination justify-content-center">
+    <li class="page-item"><a class="page-link" href="{% url 'admin_book' %}?page=1">第一页</a></li>
+    <li class="page-item {% if not paginator.previous %}disabled{% endif %}"><a class="page-link" href="{% url 'admin_book' %}?page={{ paginator.previous }}">&lt;</a></li>
+    {% for page in paginator.get_neighbor_page_list %}
+      <li class="page-item {% if page == paginator.page %}active{% endif %}"><a class="page-link" href="{% url 'admin_book' %}?page={{ page }}">{{ page }}</a></li>
+    {% endfor %}
+    <li class="page-item {% if not paginator.next %}disabled{% endif %}"><a class="page-link" href="{% url 'admin_book' %}?page={{ paginator.next }}">&gt;</a></li>
+    <li class="page-item"><a class="page-link" href="{% url 'admin_book' %}?page={{ paginator.get_page_num }}">最后一页</a></li>
+  </ul>
 {% endblock %}

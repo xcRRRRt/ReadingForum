@@ -9,30 +9,60 @@ class AuthRequired:
     """
     这么逆天的屎山，我要铭记一辈子，骚凹瑞
 
+    django View装饰器，可以装饰类，也可以装饰函数，可以无参，也可以有参，具体使用方法参考下方
 
-    django View装饰器，可以装饰类，也可以装饰函数，可以无参，也可以有参
-    若要在该类中增加新的装饰器，请务必严格遵守规则
+    若要在该类中增加新的装饰器，请务必严格遵守规则，具体方法参考下方
 
+    使用方法
+    ::::::::
+    **若装饰器有参数，请保证参数是以键值对的形式传入的**
+    ::
 
-    使用方法：@AuthRequired.xxx_required(argument1=2, argument2="hello", argument3="world", ...)
-    请保证参数是以键值对的形式传入的
+        @AuthRequired.login_required
+        class TestView(views.View):
+            def get(self, request, *args, **kwargs):
+                pass
 
+            def post(self, request, *args, **kwargs):
+                pass
+        或
+        @AuthRequired.login_required()
+        class TestView(views.View):
+            def get(self, request, *args, **kwargs):
+                pass
 
-    如何添加新的装饰器(假设装饰器的名字叫 xyz_required)
+            def post(self, request, *args, **kwargs):
+                pass
+        或
+        @AuthRequired.login_required
+        def test(self, request, *args, **kwargs):
+            pass
+        或
+        @AuthRequired.login_required()
+        def test(self, request, *args, **kwargs):
+            pass
 
-    1. 新增一个@classmethod方法
+    添加新的装饰器
+    :::::::::::::
+
+    1. 新增新增一个@classmethod方法
+    '''''''''''''''''''''''''''''
+    ::
+
         @classmethod
-        def xyz_required(cls, *args, argument1, argument2, argument3, ...):
-            :param cls:
-            :param *args: 若为无参装饰器(指装饰器后面没有括号)，args[0]必定为被装饰的类/函数
-                          若为有参装饰器, 则args无用
-            :param **kwargs: 若为有参装饰器，则需要将**kwargs改为需要的参数
-            return _auth_required(cls.xyz_required.__name__, *args, argument1=argument1， argument2=argument2, argument3=argument3)
+            def xyz_required(cls, *args, argument1, argument2, argument3):
+                :param *args: 若为无参装饰器(指装饰器后面没有括号)，args[0]必定为被装饰的类/函数
+                              若为有参装饰器, 则args无用
+                :param **kwargs: 若为有参装饰器，则需要将**kwargs改为需要的参数
+                return _auth_required(cls.xyz_required.__name__, *args, argument1=argument1， argument2=argument2, argument3=argument3)
 
     2. 在类下方新增两个函数
+    '''''''''''''''''''''''''
+    ::
+
         def _xyz_required_cls_return(self, cls, request, decorator_kwargs, *args, **kwargs):
             该函数为类装饰器的判断逻辑
-            :param self                 !important 请不要忘记该参数，因为这是给类用的
+            :param self                 !important **请不要忘记该参数，因为这是给类用的**
             :param cls                  被装饰的类
             :param request              请求
             :param decorator_kwargs     装饰器的参数
@@ -41,6 +71,7 @@ class AuthRequired:
             if ......:      可以通过request或者decorator_kwargs获取想要的值，进行验证
                 return HttpResponse()/redirect()/......
             return cls(self, request, *args, **kwargs)  # 如果通过验证，则进如被装饰的类
+
         def _xyz_required_func_return(self, cls, request, decorator_kwargs, *args, **kwargs):
             该函数为函数装饰器的判断逻辑
             :param func                 被装饰的函数
@@ -52,9 +83,16 @@ class AuthRequired:
                 return HttpResponse()/redirect()/......
             return func(request, *args, **kwargs)  # 如果通过验证，则进如被装饰的类
 
-    3. 下方还有一个字典，请将上方两个函数按照规则加入
-        'xyz_required': [_xyz_required_cls_return, _xyz_required_func_return],
-        装饰器名字: [类装饰器的判断逻辑，函数装饰器的判断逻辑]
+    3. 将上方两个函数按照规则加入下方字典
+    ''''''''''''''''''''''''''''''''''''''''''''''
+    **装饰器名字: [类装饰器的判断逻辑，函数装饰器的判断逻辑]**
+    ::
+
+        return_dict = {
+            'admin_required': [_admin_required_cls_return, _admin_required_func_return],
+            'login_required': [_login_required_cls_return, _login_required_func_return],
+            'xyz_required': [_xyz_required_cls_return, _xyz_required_func_return],
+        }
     """
 
     @classmethod
@@ -134,51 +172,3 @@ def _auth_required(auth_required_name, *other_args, **other_kwargs):
                 return _auth_required_func(obj, auth_required_name, **other_kwargs)
 
         return _cls_dispatcher
-
-# def _admin_required_cls(cls):
-#     def _wrapper(self, request, *args, **kwargs):
-#         if not request.session.get("is_admin"):
-#             return HttpResponseForbidden(
-#                 "<h3>素惹，你没看错，本可站街13个小时无人问津，急需<span style=\"font-size: 54px\">403</span>个男人的安慰</h3>")
-#
-#         print(cls, request, args, kwargs)
-#         return cls(self, request, *args, **kwargs)
-#
-#     return _wrapper
-#
-#
-# def _admin_required_func(func):
-#     def _wrapper(request, *args, **kwargs):
-#         if not request.session.get("is_admin"):
-#             return HttpResponseForbidden(
-#                 "<h3>素惹，你没看错，本可站街13个小时无人问津，急需<span style=\"font-size: 54px\">403</span>个男人的安慰</h3>")
-#
-#         return func(request, *args, **kwargs)
-#
-#     return _wrapper
-#
-#
-# def admin_required(*other_args, **kwargs):
-#     if len(other_args) == 1 and (inspect.isclass(other_args[0]) or inspect.isfunction(other_args[0])):
-#         """无参装饰器"""
-#         _obj = other_args[0]
-#         if inspect.isclass(_obj):
-#             """类装饰器"""
-#             _obj.dispatch = _admin_required_cls(_obj.dispatch)
-#             return _obj
-#         else:
-#             """函数装饰器"""
-#             return _admin_required_func(_obj)
-#     else:
-#         """有参装饰器"""
-#
-#         def _admin_required_class(obj):
-#             if inspect.isclass(obj):
-#                 """类装饰器"""
-#                 obj.dispatch = _admin_required_cls(obj.dispatch)
-#                 return obj
-#             else:
-#                 """函数装饰器"""
-#                 return _admin_required_func(obj)
-#
-#         return _admin_required_class

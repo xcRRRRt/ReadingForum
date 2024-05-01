@@ -1,0 +1,38 @@
+.sort {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.sort-up,
+.sort-down {
+    width: 0;
+    height: 0;
+    border-right: 6px solid transparent;
+    border-left: 6px solid transparent;
+}
+
+.sort-up {
+    border-bottom: 6px solid;
+    margin-bottom: 2px;
+}
+
+.sort-down {
+    border-top: 6px solid;
+}
+
+.sort-down-deactive {
+    border-bottom-color: #cccccc;
+}
+
+.sort-up-deactive {
+    border-top-color: #cccccc;
+}
+
+.sort-up-active {
+    border-bottom-color: #494949;
+}
+
+.sort-down-active {
+    border-top-color: #494949;
+}

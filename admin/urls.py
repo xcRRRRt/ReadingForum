@@ -6,4 +6,5 @@ urlpatterns = [
     path('', views.AdminIndexView.as_view(), name='admin_index'),
     path("book/", views.AdminBookView.as_view(), name='admin_book'),
     path("book/add/", views.AdminBookAddView.as_view(), name='admin_book_add'),
+    path("book/edit/<_id>/", views.AdminBookUpdateView.as_view(), name='admin_book_edit')
 ]

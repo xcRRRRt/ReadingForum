@@ -1,0 +1,23 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block admin_module %}
+  <div id="admin-table">
+    <a class="btn btn-outline-success" href="{% url 'admin_book_add' %}">添加</a>
+    <div class="input-group w-25 float-end">
+    <span class="input-group-text">
+      <img src="{% static 'img/search.svg' %}" alt="搜索">
+    </span>
+      <input type="search" class="form-control col-4" id="admin-search">
+    </div>
+    <table class="table table-hover mt-2">
+      <tbody>
+      </tbody>
+    </table>
+    {# 分页 #}
+    <ul class="pagination justify-content-center"></ul>
+  </div>
+  <body>
+  <script src="{% static 'js/admin_list_page.js' %}"></script>
+  </body>
+{% endblock %}

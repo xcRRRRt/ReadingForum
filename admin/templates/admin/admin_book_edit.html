@@ -5,30 +5,58 @@
     {% csrf_token %}
     <div class="col-4">
       <label for="book-title" class="form-label text-secondary">书名</label>
-      <input type="text" class="form-control" id="book-title">
+      <input type="text" class="form-control" id="book-title" value="{{ book.title }}">
     </div>
-    <div class="col-4">
+    <div class="col-3">
       <label for="book-isbn" class="form-label text-secondary">ISBN</label>
-      <input type="text" class="form-control" id="book-isbn">
+      <input type="text" class="form-control" id="book-isbn" value="{{ book.isbn }}">
+    </div>
+    <div class="col-3">
+      <label for="book-price" class="form-label text-secondary">价格</label>
+      <input type="number" step="0.01" class="form-control" id="book-price" value="{{ book.price }}">
+    </div>
+    <div class="col-2">
+      <label for="book-stock" class="form-label text-secondary">库存</label>
+      <input type="number" class="form-control" id="book-stock" placeholder="默认为0" value="{{ book.stock }}">
+    </div>
+    <div class="col-8">
+      <label for="book-label" class="form-label text-secondary">标签(以空格分割多个标签)</label>
+      <input type="text" class="form-control" id="book-label" placeholder="以空格分割多个标签" value="{% for label in book.label %}{{ label }} {% endfor %}">
     </div>
     <div class="col-4">
-      <label for="book-author" class="form-label text-secondary">作者</label>
-      <input type="text" class="form-control" id="book-author">
-    </div>
-    <br>
-    <div class="col-12">
-      <label for="book-label" class="form-label text-secondary">标签(以空格分割多个标签)</label>
-      <input type="text" class="form-control" id="book-label" placeholder="以空格分割多个标签">
+      <label for="book-status" class="form-label text-secondary">书籍状态</label>
+      <select id="book-status" class="form-select">
+        <option value="1" {% if book.status == 1 %}selected{% endif %}>在售</option>
+        <option value="2" {% if book.status == 2 %}selected{% endif %}>售空</option>
+        <option value="3" {% if book.status == 3 %}selected{% endif %}>下架</option>
+      </select>
     </div>
     <div class="col-4">
       <label for="book-cover" class="form-label text-secondary">封面</label>
       <input type="file" class="form-control" id="book-cover-upload" accept="image/*">
-      <img class="mt-3 mx-auto d-block" id="book-cover" style="width: 70%">
+      <img class="mt-3 mx-auto d-block" id="book-cover" style="width: 70%" src="{{ book.cover }}">
     </div>
     <div class="col-8 mb-3">
       <label for="book-introduction" class="form-label text-secondary">简介</label>
-      <textarea class="form-control" id="book-introduction"></textarea>
+      <textarea class="form-control" id="book-introduction">{{ book.introduction }}</textarea>
     </div>
+
+    {% if book.book_data %}
+      {% for field in book.book_data.items %}
+        <div class="col-12 row mt-2">
+          <div class='col-3'>
+            <input type='text' class='form-control field-name' placeholder='字段名' value="{{ field.0 }}">
+          </div>
+          <div class='col-9'>
+            <div class="input-group">
+              <input type='text' class='form-control field-value' placeholder='内容' value="{{ field.1 }}">
+              <button type="button" class="btn btn-outline-danger" onclick="$(this).parent().parent().parent().remove();">删除</button>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+    {% endif %}
 
   </form>
 
@@ -75,8 +103,10 @@
 
               let title = $("#book-title").val();
               let isbn = $("#book-isbn").val();
-              let author = $("#book-author").val();
+              let price = $("#book-price").val();
+              let stock = $("#book-stock").val();
               let label = $("#book-label").val();
+              let status = $("#book-status").val();
               let cover = $("#book-cover-upload")[0].files[0];  // 获取文件
               let introduction = $("#book-introduction").val();
 
@@ -101,13 +131,53 @@
               }
               form_data.append('isbn', isbn);
 
-              // 处理作者标签、封面、简介
-              if (author)
-                  form_data.append("author", author);
-              else
-                  form_data.append("author", "佚名");
+              // 处理库存
+              if (stock < 0) {
+                  $("#book-stock").addClass("is-invalid");
+                  show_toast("text-bg-warning", "提示", "", "库存不能小于0");
+                  return;
+              } else if (!stock) {
+                  form_data.append("stock", "0");
+              } else {
+                  $("#book-stock").removeClass("is-invalid");
+                  form_data.append("stock", stock);
+              }
+
+              // 处理价格
+              if (price < 0) {
+                  $("#book-price").addClass("is-invalid");
+                  show_toast("text-bg-warning", "提示", "", "价格不能小于0");
+                  return;
+              } else if (!price) {
+                  $("#book-price").addClass("is-invalid");
+                  show_toast("text-bg-warning", "提示", "", "价格不能为空");
+                  return;
+              } else {
+                  $("#book-price").removeClass("is-invalid");
+                  form_data.append("price", price);
+              }
+              // let reg = /(^[1-9](\d+)?(\.\d{1,2})?$)|(^0$)|(^\d\.\d{1,2}$)/;
+              // if (price.trim() === "") {
+              //    $("#book-title").addClass("is-invalid");
+              //    show_toast("text-bg-warning", "提示", "", "未输入金额");
+              //    return;
+              //} else if (!reg.test(price)) {
+              //    $("#book-title").addClass("is-invalid");
+              //    show_toast("text-bg-warning", "提示", "", "输入金额格式不正确");
+              //    return;
+              //} else if (price < 0) {
+              //    $("#book-title").addClass("is-invalid");
+              //    show_toast("text-bg-warning", "提示", "", "金额不能小于0");
+              //    return;
+              //} else {
+              //    $("#book-title").removeClass("is-invalid");
+              // }
+
+              // 标签、封面、简介、状态
               if (label)
                   form_data.append('label', label);
+              if (status)
+                  form_data.append("status", status);
               if (cover)
                   form_data.append('cover', cover);
               if (introduction)
@@ -134,7 +204,7 @@
 
 
               $.ajax({
-                  url: '{% url "admin_book_add" %}',
+                  url: '{% if not book %}{% url "admin_book_add" %}{% else %}{% url 'admin_book_edit' book.id%}{% endif %}',
                   type: 'post',
                   headers: {'X-CSRFToken': csrfToken},
                   data: form_data,
@@ -142,7 +212,6 @@
                   contentType: false,    // 不设置内容类型
                   success: function (res) {
                       console.log(res);
-                      alert(2);
                       window.location.href = "{% url 'admin_book' %}"
                   }
               });

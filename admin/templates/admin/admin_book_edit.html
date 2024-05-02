@@ -28,7 +28,7 @@
       <select id="book-status" class="form-select">
         <option value="1" {% if book.status == 1 %}selected{% endif %}>在售</option>
         <option value="2" {% if book.status == 2 %}selected{% endif %}>售空</option>
-        <option value="3" {% if book.status == 3 %}selected{% endif %}>下架</option>
+        <option value="3" {% if book.status == 3 or not book.status %}selected{% endif %}>下架</option>
       </select>
     </div>
     <div class="col-4">

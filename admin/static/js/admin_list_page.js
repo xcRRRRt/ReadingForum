@@ -4,6 +4,7 @@
 
 $(document).ready(function () {
     ajax_load_page();
+    $("#admin-add").attr("href", window.location.pathname + "add/");
     $("#admin-table .page-item").on("click", change_page);
     $("#admin-search").on('blur', search);
 });

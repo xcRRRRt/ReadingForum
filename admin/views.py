@@ -1,13 +1,13 @@
 from django import views
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
 from utils.file_utils import save_file
-from utils.paginator import Paginator
 from utils.view_decorator import AuthRequired
+from utils.paginator import Paginator
 
 # Create your views here.
 book_service = BookService()
@@ -27,13 +27,14 @@ class AdminIndexView(views.View):
 @AuthRequired.admin_required
 class AdminUserView(views.View):
     """
-
+    管理员用户列表
     """
     per_page = 10
     page_range_size = 5
     required_fields = {"username": "用户名", "email": "邮箱", "admin": "管理员"}
     can_sort = ["username"]
-    paginator = Paginator(user_service, required_fields, can_sort, per_page=per_page, page_range_size=page_range_size)
+    paginator = Paginator(user_service, required_fields, can_sort=can_sort, per_page=per_page,
+                          page_range_size=page_range_size)
 
     def get(self, request, *args, **kwargs):
         page = int(request.GET.get('page', 1))

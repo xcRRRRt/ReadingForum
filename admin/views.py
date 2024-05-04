@@ -1,13 +1,13 @@
 from django import views
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 
 from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
 from utils.file_utils import save_file
-from utils.view_decorator import AuthRequired
 from utils.paginator import Paginator
+from utils.view_decorator import AuthRequired
 
 # Create your views here.
 book_service = BookService()

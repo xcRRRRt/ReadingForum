@@ -4,6 +4,7 @@ import random
 from typing import Mapping, Any
 
 from bson import ObjectId
+from pymongo.results import UpdateResult, InsertOneResult
 
 from utils.db_operation import MongodbOperation
 
@@ -23,13 +24,21 @@ class BookService:
         res = self.db.book_insert_one(data)
         return res.acknowledged, str(res.inserted_id)
 
-    def find_book_by_id(self, book_id: str) -> Mapping[str, Any] | None:
+    def find_book_by_id(self, book_id: str, *required_fields, map_fields: bool = False) -> Mapping[str, Any] | None:
         """
         按照ObjectId查询图书
         :param book_id: ObjectId
+        :param required_fields: 需要的字段
+        :param map_fields: 是否映射字段
         :return: 图书
         """
-        book = self.db.book_find_one({"_id": ObjectId(book_id)})
+        projection = {field: 1 for field in required_fields}
+        book = self.db.book_find_one({"_id": ObjectId(book_id)}, projection=projection)
+        if map_fields:
+            for field, field_map_dict in self.map_fields.items():
+                if field in book:
+                    book[field + "_mapped"] = field_map_dict[book[field]]
+        book["id"] = str(book["_id"])
         return book
 
     def update_book_by_id(self, book_id: str, **kwargs) -> bool:
@@ -50,9 +59,36 @@ class BookService:
         res_delete = self.db.book_update_one({'_id': ObjectId(book_id)}, {'$unset': to_delete})
         return res_update.acknowledged and res_delete.acknowledged
 
+    def push_comment(self, book_id: str, user_id: str | ObjectId, comment: str) -> UpdateResult:
+        res = self.db.book_update_one({'_id': ObjectId(book_id)},
+                                      {
+                                          '$push': {
+                                              'comments': {
+                                                  "user_id": ObjectId(user_id),
+                                                  "comment": comment,
+                                                  "time": datetime.datetime.now()
+                                              }
+                                          }
+                                      })
+        return res
+
+    def find_book_comments(self, book_id: str, skip: int, limit: int, sort_by: dict[str, int]):
+        pipeline = [
+            {'$match': {'_id': ObjectId(book_id)}},
+            {'$unwind': '$comments'},
+            {'$sort': sort_by},
+            {'$limit': limit},
+            {'$skip': skip},
+            {'$project': {'comments': 1}}
+        ]
+        comments = self.db.book_aggregate(pipeline)
+        comments = list(comment.get("comments") for comment in comments)
+        return comments
+
 
 if __name__ == "__main__":
     book_service = BookService()
-    for i in range(1, 100):
-        book_service.create_book(isbn=str(random.randint(100000, 999999)), title="图书" + str(i),
-                                 price=round(random.random() * 100, 2), stock=random.randint(1, 100))
+    # for i in range(1, 100):
+    #     book_service.create_book(isbn=str(random.randint(100000, 999999)), title="图书" + str(i),
+    #                              price=round(random.random() * 100, 2), stock=random.randint(1, 100))
+    print(book_service.find_book_comments("66367f4d787d221d08173540", 0, 10, {"time": 1}))

@@ -1,0 +1,9 @@
+#author-info a {
+    color: rgb(51, 122, 183);
+    text-decoration: none;
+}
+
+#author-info a:hover {
+    color: rgb(35, 82, 124);
+    /*text-decoration: underline rgb(35, 82, 124);*/
+}

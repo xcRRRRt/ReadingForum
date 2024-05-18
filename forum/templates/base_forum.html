@@ -14,6 +14,7 @@
   <script src="{% static 'js/edit_profile.js' %}"></script>
   <script src="{% static 'js/editor.js' %}"></script>
   <script src="{% static 'js/post_detail.js' %}"></script>
+  <script src="{% static 'js/show_toast.js' %}"></script>
   <link rel="stylesheet" href="{% static 'css/breadcrumb_link.css' %}">
   <link rel="stylesheet" href="{% static 'css/base_forum.css' %}">
   <link rel="stylesheet" href="{% static 'css/userinfo.css' %}">
@@ -21,6 +22,11 @@
   <link rel="stylesheet" href="{% static 'css/editor.css' %}">
   <link rel="stylesheet" href="{% static 'css/post_detail.css' %}">
   <link rel="stylesheet" href="{% static 'css/sort_button.css' %}">
+  <link rel="stylesheet" href="{% static 'css/book_detail.css' %}">
+  <link rel="stylesheet" href="{% static 'css/avatar_mini.css' %}">
+  <link rel="stylesheet" href="{% static 'css/user_info_mini.css' %}">
+  <link rel="stylesheet" href="{% static 'css/up_down.css' %}"> {# 赞踩(上下箭头) #}
+  <link rel="stylesheet" href="{% static 'css/comments.css' %}">
 </head>
 <body>
 <div id="navbar-container">
@@ -67,8 +73,8 @@
         </div>
       {% else %}
         {# 用户在哪里跳转到注册/登录页面，注册/登录完之后就跳转回原来的页面 #}
-        <a href="{% url "login" %}?next={% firstof request.path "/" %}" class="nav-link px-3">登录</a>
-        <a href="{% url 'register' %}?next={% firstof request.path "/" %}" class="nav-link px-3">注册</a>
+        <a href="{% url "login" %}?next={% firstof request.path "/" %}" class="nav-link px-3" id="navbar-login">登录</a>
+        <a href="{% url 'register' %}?next={% firstof request.path "/" %}" class="nav-link px-3" id="navbar-register">注册</a>
       {% endif %}
     </div>
   </nav>

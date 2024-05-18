@@ -87,6 +87,9 @@ class AdminBookView(views.View):
     paginator = Paginator(book_service, required_fields, can_sort, can_search, can_choose, per_page, page_range_size)
 
     def get(self, request, *args, **kwargs):
+        """
+        request接受参数: page:int, to_search:str, field: str, next_state:int
+        """
         # 修改页码
         page = int(request.GET.get('page', 1))
         self.paginator.page = page

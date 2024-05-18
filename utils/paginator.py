@@ -1,10 +1,13 @@
 import math
 
+from typing import *
+from typing import Dict, Any
+
 
 # 这可能是我写过的最棒的代码，值得和磊一起放在我的β里，靴靴
 class Paginator:
-    def __init__(self, collection_service,
-                 required_fields: dict[str, str],
+    def __init__(self, collection_service=None,
+                 required_fields: dict[str, str] = None,
                  can_sort: list[str] = None,
                  can_search: list[str] = None,
                  can_choose: list[str] = None,
@@ -221,6 +224,76 @@ class Paginator:
                     continue
                 if key in self._map_fields:
                     cleaned_data[key] = self._map_fields[key][value]
+                    continue
+                cleaned_data[key] = self._clean_data(value)
+            return cleaned_data
+        elif isinstance(data, list):
+            cleaned_data = []
+            for item in data:
+                cleaned_data.append(self._clean_data(item))
+                # 检查是否是最后一层列表
+            if all(isinstance(item, (str, int, float)) for item in cleaned_data):
+                return ','.join(str(item) for item in cleaned_data)
+            else:
+                return cleaned_data
+        elif isinstance(data, (str, int, float, bool)):
+            return data
+        else:
+            # 如果数据类型不是列表、字典、字符串或数字，则将其转换为字符串
+            return str(data)
+
+
+class PaginatorFromFunction:
+    def __init__(self, func: Callable, per_page: int = 10):
+        self.func = func
+        self._per_page = per_page
+        self._page = 1
+        self._skip = (self._page - 1) * self._per_page
+        self._sort_by = {}
+
+    @property
+    def page(self):
+        return self._page
+
+    @page.setter
+    def page(self, value):
+        self._page = value
+        self._skip = (self._page - 1) * self._per_page
+
+    @property
+    def sort_by(self) -> dict[Any, Any]:
+        return self._sort_by
+
+    @sort_by.setter
+    def sort_by(self, value: dict[Any, Any]):
+        for k, v in value.items():
+            if v != 0:
+                self._sort_by[k] = v
+
+    @property
+    def per_page(self):
+        return self._per_page
+
+    @per_page.setter
+    def per_page(self, value):
+        self._per_page = value
+        self._skip = (self._page - 1) * self._per_page
+
+    def __call__(self, **kwargs):
+        objs = self.func(**kwargs, skip=self._skip, sort_by=self.sort_by, limit=self._per_page)
+        return self._clean_data(objs)
+
+    def _clean_data(self, data):
+        """
+        清理数据，防止有对象
+        :param data: 数据
+        :return: 无对象数据
+        """
+        if isinstance(data, dict):
+            cleaned_data = {}
+            for key, value in data.items():
+                if key == "_id":
+                    cleaned_data["id"] = str(value)
                     continue
                 cleaned_data[key] = self._clean_data(value)
             return cleaned_data

@@ -18,4 +18,6 @@ urlpatterns = [
     path('edit-userinfo/', views.edit_userinfo, name='edit_userinfo'),
     path('save-addr/', views.save_addresses, name='save_addresses'),
 
+    path('is_login/', views.is_login, name='is_login')
+
 ]

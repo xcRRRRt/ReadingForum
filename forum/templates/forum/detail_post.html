@@ -9,7 +9,7 @@
           <h1 id="post-title">{{ post.title }}</h1>
           {# 作者信息 #}
           <div id="author-info" class="d-flex my-3">
-            <img id="post-avatar"
+            <img id="avatar-mini"
                  src="{% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                  alt="头像">
             <div class="ms-3">

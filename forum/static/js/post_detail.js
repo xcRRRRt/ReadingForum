@@ -119,15 +119,15 @@ function send_like_info(is_post_like, click_like, like_act, unlike_act) {
 }
 
 // 显示提示消息
-function show_toast(head_bg_class, strong_text, small_text, body_text) {
-    // 获取提示框的引用
-    const toastLive = $("#liveToast");
-    // 设置提示框的样式
-    toastLive.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
-    toastLive.find("strong").text(strong_text);
-    toastLive.find("small").text(small_text);
-    toastLive.find(".toast-body").text(body_text);
-    // 实例化并显示提示框
-    const toast = new bootstrap.Toast(toastLive);
-    toast.show();
-}
+// function show_toast(head_bg_class, strong_text, small_text, body_text) {
+//     // 获取提示框的引用
+//     const toastLive = $("#liveToast");
+//     // 设置提示框的样式
+//     toastLive.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
+//     toastLive.find("strong").text(strong_text);
+//     toastLive.find("small").text(small_text);
+//     toastLive.find(".toast-body").text(body_text);
+//     // 实例化并显示提示框
+//     const toast = new bootstrap.Toast(toastLive);
+//     toast.show();
+// }

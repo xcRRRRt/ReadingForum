@@ -60,24 +60,7 @@
     border-color: #ccc;
 }
 
-#post-avatar {
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
 #post-like img {
     height: 20px;
     width: 20px;
-}
-
-#author-info a {
-    color: rgb(51, 122, 183);
-    text-decoration: none;
-}
-
-#author-info a:hover {
-    color: rgb(35, 82, 124);
-    /*text-decoration: underline rgb(35, 82, 124);*/
 }

@@ -31,6 +31,7 @@ class LoginView(views.View):
                 form.cleaned_data['username'],
                 "admin", "avatar_url"
             )
+            request.session['user_id'] = str(user.get("_id"))
             request.session['avatar_url'] = user.get("avatar_url")
             if user.get("admin"):
                 request.session['is_admin'] = True
@@ -51,13 +52,15 @@ class RegisterView(views.View):
     def post(self, request):
         form = RegisterForm(request.POST)
         if form.is_valid():
-            userinfo_service.create_user(
+            user_id = userinfo_service.create_user(
                 form.cleaned_data['username'],
                 form.cleaned_data['password'],
                 form.cleaned_data['email']
-            )
+            ).inserted_id
+            print(user_id)
             verification_service.delete_verification_code(form.cleaned_data['email'])
             request.session['username'] = form.cleaned_data['username']
+            request.session['user_id'] = str(user_id)
             return render(request, 'forum/home.html')
         return render(request, "user/register.html", {"form": form})
 
@@ -214,3 +217,10 @@ def save_addresses(request):
         return JsonResponse({"success": True})
     else:
         return JsonResponse({"success": False})
+
+
+def is_login(request):
+    """是否已登录"""
+    username = request.session.get("username")
+    is_login = True if username else False
+    return JsonResponse({"is_login": is_login})

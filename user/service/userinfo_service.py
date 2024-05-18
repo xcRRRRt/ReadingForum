@@ -14,7 +14,7 @@ class UserInfoService:
     def __init__(self):
         self.db = MongodbOperation('readingforum', 'userinfo')
 
-    def create_user(self, username: str, password: str, email: str) -> bool:
+    def create_user(self, username: str, password: str, email: str):
         """
         创建一个新的用户
         :param username: 用户名
@@ -26,7 +26,7 @@ class UserInfoService:
         res = self.db.userinfo_insert_one(
             {'username': username, 'password': password, 'email': email}
         )
-        return res.acknowledged
+        return res
 
     def is_password_correct(self, username: str, password: str) -> bool:
         """
@@ -127,6 +127,19 @@ class UserInfoService:
         for k, v in userinfo.items():
             if isinstance(v, datetime.datetime):
                 userinfo[k] = v.date()
+        userinfo["id"] = userinfo["_id"]
+        return userinfo
+
+    def find_userinfo_by_id(self, user_id: str | ObjectId, *required_fields) -> Mapping[str, Any] | None:
+        """
+
+        """
+        projection = {field: 1 for field in required_fields}  # 创建投影，仅包含需要的字段
+        userinfo = self.db.userinfo_find_one({'_id': user_id}, projection=projection)
+        for k, v in userinfo.items():
+            if isinstance(v, datetime.datetime):
+                userinfo[k] = v.date()
+        userinfo["id"] = userinfo["_id"]
         return userinfo
 
     def add_post(self, username: str, post_id: ObjectId) -> bool:

@@ -38,7 +38,7 @@
     </div>
     <div class="col-8 mb-3">
       <label for="book-introduction" class="form-label text-secondary">简介</label>
-      <textarea class="form-control" id="book-introduction">{{ book.introduction }}</textarea>
+      <textarea class="form-control" id="book-introduction" rows="10">{{ book.introduction }}</textarea>
     </div>
 
     {% if book.book_data %}
@@ -50,7 +50,9 @@
           <div class='col-9'>
             <div class="input-group">
               <input type='text' class='form-control field-value' placeholder='内容' value="{{ field.1 }}">
-              <button type="button" class="btn btn-outline-danger" onclick="$(this).parent().parent().parent().remove();">删除</button>
+              <button type="button" class="btn btn-outline-danger"
+                      onclick="$(this).parent().parent().parent().remove();">删除
+              </button>
             </div>
           </div>
         </div>

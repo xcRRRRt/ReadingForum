@@ -1,0 +1,240 @@
+{% extends 'base_forum.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="container">
+    <div class="mx-5 row">
+      {# 面包屑 #}
+      <nav aria-label="breadcrumb" class="pt-2">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
+          <li class="breadcrumb-item" aria-current="page">{{ book.title }}</li>
+        </ul>
+      </nav>
+      {# 图书封面、标题、简介 #}
+      <div class="col-3">
+        <div class="card" style="width: 18rem;">
+          {% if book.cover %}
+            <img src="{{ book.cover }}" class="card-img-top" alt="书籍封面">
+          {% endif %}
+          <div class="card-body">
+            <h1 id="book-title" class="card-title">{{ book.title }}</h1>
+            <div id="book-introduction" class="card-text">
+              {{ book.introduction|linebreaks }}
+            </div>
+          </div>
+        </div>
+      </div>
+      {# 图书信息 #}
+      <div class="col-7">
+        {# 图书信息+商品信息 #}
+        <div class="mx-3 row">
+          {# 图书信息 #}
+          <div class="col-7 mb-2">
+            <div class="mb-2 book-detail-subtitle">作品信息</div>
+            <div id="book-other-data" class="mb-4">
+              {% for k, v in book.book_data.items %}
+                <div>
+                  <span>{{ k }}:</span>
+                  <span>{{ v }}</span>
+                </div>
+              {% endfor %}
+            </div>
+            {# 标签 #}
+            <div class="mb-2 book-detail-subtitle">作品标签</div>
+            <div class="d-flex flex-wrap" style="position: relative">
+              {% for label in book.label %}
+                <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+                  <span>{{ label }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          {# 商品信息 #}
+          <div class="col-5 border-start" id="goods-info-wrapper">
+            <div class="mb-2 book-detail-subtitle">商品信息</div>
+            <div>
+              <span>价格:</span>
+              <span>{{ book.price }}</span>
+            </div>
+            <div>
+              <span>库存:</span>
+              <span>{{ book.stock }}</span>
+            </div>
+            <div>
+              <span>商品状态:</span>
+              <span>{{ book.status_mapped }}</span>
+            </div>
+            <div>
+              <span>ISBN:</span>
+              <span>{{ book.isbn }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mx-4 mt-3">
+          <a href="#comment-input-wrapper" class="write-post write-comment-btn"><img src="{% static 'img/write.svg' %}"
+                                                                                     alt="发布">发表书评</a>
+          <a href="#" class="write-post"><img src="{% static 'img/write.svg' %}" alt="发布">发布帖子</a>
+        </div>
+
+        {# 书评 #}
+        <div class="mx-4 mt-5" id="book-comments-wrapper">
+          <div>
+            <span class="module-subtitle">书评</span>
+            <a href="{% url 'comments' book.id %}">查看全部</a>
+            <a href="#comment-input-wrapper" class="write-post ms-3 write-comment-btn"><img
+                src="{% static 'img/write.svg' %}" alt="发布">发表书评</a>
+          </div>
+
+          {# 发表书评 #}
+          <div id="comment-input-wrapper" class="mb-5" style="display: none">
+            {% csrf_token %}
+            <label for="comment-input" class="form-label"></label>
+            <textarea rows="5" maxlength="500" class="form-control" id="comment-input"></textarea>
+            <button id="send-comment-btn" type="submit" class="float-end btn btn-outline-primary btn-sm mt-3">发表书评
+            </button>
+          </div>
+
+          <div class="mb-2 pb-1">
+            <span>倒序</span> /
+            <span>正序</span>
+          </div>
+
+          {% if comments %}
+            {% for comment in comments %}
+              <div id="comments" class="border-top">
+                <div class="d-flex justify-content-between my-2">
+                  {# 发布者信息 #}
+                  <div id="author-info" class="d-flex">
+                    <img class="mt-2" id="avatar-mini" style="width: 25px;height: 25px"
+                         src="
+                             {% if comment.avatar_url %}{{ comment.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                         alt="头像">
+                    <div class="ms-2">
+                      <a href="{% if comment.username == request.session.username %}
+                      	{% url 'userinfo' %}
+                      	{% else %}
+                      	{% url 'userinfo_other' comment.username %}
+                        {% endif %} ">{{ comment.username }}
+                      </a>
+                      <div class="text-secondary" style="font-size: 11px">{{ comment.time }}</div>
+                    </div>
+                  </div>
+                  {# 顶/踩 #}
+                  {#              <div id="up-down" class="me-3 pt-2 d-flex justify-content-center">#}
+                  {#                <div class="pe-2 ">#}
+                  {#                  <img src="{% static 'img/up.svg' %}" alt="顶">#}
+                  {#                  <div>42</div>#}
+                  {#                </div>#}
+                  {#                <div>#}
+                  {#                  <img src="{% static 'img/down.svg' %}" alt="踩">#}
+                  {#                  <div>18</div>#}
+                  {#                </div>#}
+                  {#              </div>#}
+                </div>
+                {# 书评内容 #}
+                <p class="mx-2">{{ comment.comment }}</p>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center" class="my-4">还没有书评哦~</div>
+          {% endif %}
+          <a class="mt-2 more-item">>>查看更多帖子</a>
+        </div>
+
+        {# 帖子 #}
+        <div class="mx-3 mt-5" id="book-posts-wrapper">
+          <div>
+            <span class="module-subtitle">帖子</span>
+            <a href="#">查看全部</a>
+            <a href="#" class="write-post ms-3"><img src="{% static 'img/write.svg' %}" alt="发布">发布帖子</a>
+          </div>
+          <div class="mb-2 pb-1 pt-2">
+            <span>倒序</span> /
+            <span>正序</span>
+          </div>
+          {# 单条帖子 #}
+          <div id="comments" class="border-top">
+            <div class="d-flex justify-content-between my-2">
+              {# 发布者信息 #}
+              <div id="author-info" class="d-flex">
+                <img id="avatar-mini"
+                     src="
+                         {% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                     alt="头像">
+                <div class="ms-3">
+                  <a href="#">xcRttttttt</a>
+                  <div class="text-secondary">2024-3-11 17.43.52</div>
+                </div>
+              </div>
+            </div>
+            {# 帖子内容 #}
+            <div class="mx-2">
+              <a href="#" id="post-title-mini">
+                <span>在灯下日落之吋，暂停画笔，观察与纪录，嗅到、摸到、看到，与义春一起去旅行……</span>
+              </a>
+              <p class="mt-2">
+                这部作品的悬疑成分没有之前读的几部作品那么浓烈，但是，留给读者回味的空间依然很足。本来，个人以为作者会在这个设定的基础上，通过身份的变与不变，来一场刺激的本格推理之旅。谜底揭晓时，不免有一丝惆怅，期待中的罪案，变成一系列琐碎但耐人寻味的小故事。其实，从书中的设定来看，这些小故事虽然违反规定，但有些很难上升到犯罪的角度。但正是这些灰色地带，却凸显了人类在面对问题时的种种弱点。</p>
+            </div>
+          </div>
+
+          {# 单条帖子 #}
+          <div id="comments" class="border-top">
+            <div class="d-flex justify-content-between my-2">
+              {# 发布者信息 #}
+              <div id="author-info" class="d-flex">
+                <img id="avatar-mini"
+                     src="
+                         {% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                     alt="头像">
+                <div class="ms-3">
+                  <a href="#">xcRttttttt</a>
+                  <div class="text-secondary">2024-3-11 17.43.52</div>
+                </div>
+              </div>
+            </div>
+            {# 帖子内容 #}
+            <div class="mx-2">
+              <a href="#" id="post-title-mini">
+                <span>在灯下日落之吋，暂停画笔，观察与纪录，嗅到、摸到、看到，与义春一起去旅行……</span>
+              </a>
+              <p class="mt-2">
+                这部作品的悬疑成分没有之前读的几部作品那么浓烈，但是，留给读者回味的空间依然很足。本来，个人以为作者会在这个设定的基础上，通过身份的变与不变，来一场刺激的本格推理之旅。谜底揭晓时，不免有一丝惆怅，期待中的罪案，变成一系列琐碎但耐人寻味的小故事。其实，从书中的设定来看，这些小故事虽然违反规定，但有些很难上升到犯罪的角度。但正是这些灰色地带，却凸显了人类在面对问题时的种种弱点。</p>
+            </div>
+          </div>
+
+          {# 单条帖子 #}
+          <div id="comments" class="border-top">
+            <div class="d-flex justify-content-between my-2">
+              {# 发布者信息 #}
+              <div id="author-info" class="d-flex">
+                <img id="avatar-mini"
+                     src="
+                         {% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                     alt="头像">
+                <div class="ms-3">
+                  <a href="#">xcRttttttt</a>
+                  <div class="text-secondary">2024-3-11 17.43.52</div>
+                </div>
+              </div>
+            </div>
+            {# 帖子内容 #}
+            <div class="mx-2">
+              <a href="#" id="post-title-mini">
+                <span>在灯下日落之吋，暂停画笔，观察与纪录，嗅到、摸到、看到，与义春一起去旅行……</span>
+              </a>
+              <p class="mt-2">{{ test|truncatechars:20 }}</p>
+            </div>
+          </div>
+          <a class="mt-2 more-item">>>查看更多帖子</a>
+        </div>
+      </div>
+      {# 最后一列 #}
+      <div class="col-2">最后</div>
+    </div>
+  </div>
+  <body>
+    <script src="{% static 'js/write_comment.js' %}"></script>
+  </body>
+{% endblock %}

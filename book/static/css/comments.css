@@ -1,0 +1,24 @@
+.comments-title {
+    font-weight: 800;
+    color: #494949;
+    font-size: 29px;
+    position: relative;
+}
+
+.comments-title span:first-child:hover::before {
+    content: "《";
+    position: absolute;
+    left: -31px;
+    color: #9e9e9e;
+}
+
+.comments-title span:first-child:hover::after {
+    content:  "》";
+    position: absolute;
+    margin-right: 35px;
+    color: #9e9e9e;
+}
+
+.comments-title span:last-child {
+    font-size: 28px;
+}

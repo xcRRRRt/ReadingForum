@@ -58,12 +58,12 @@ $(document).ready(function () {
     }
 })
 
-function show_toast(head_bg_class, strong_text, small_text, body_text) {
-    const toastLive = $("#liveToast");
-    toastLive.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
-    toastLive.find("strong").text(strong_text);
-    toastLive.find("small").text(small_text);
-    toastLive.find(".toast-body").text(body_text);
-    const toast = new bootstrap.Toast(toastLive);
-    toast.show();
-}
+// function show_toast(head_bg_class, strong_text, small_text, body_text) {
+//     const toastLive = $("#liveToast");
+//     toastLive.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
+//     toastLive.find("strong").text(strong_text);
+//     toastLive.find("small").text(small_text);
+//     toastLive.find(".toast-body").text(body_text);
+//     const toast = new bootstrap.Toast(toastLive);
+//     toast.show();
+// }

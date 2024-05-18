@@ -1,0 +1,28 @@
+{% extends 'base_forum.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="container">
+    <div class="mx-5 row">
+      {# 面包屑 #}
+      <nav aria-label="breadcrumb" class="pt-2">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'book_detail' book.id%}">{{ book.title }}</a></li>
+          <li class="breadcrumb-item" aria-current="page">短评</li>
+        </ul>
+      </nav>
+      {# 书评 #}
+      <div class="col-9">
+        <div class="comments-title">
+          <span>{{ book.title }}</span>&nbsp;&nbsp;
+          <span>书评</span>
+        </div>
+        {{ comments }}
+      </div>
+      <div class="col-3">
+        侧栏
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -140,7 +140,7 @@
           {% else %}
             <div style="text-align: center" class="my-4">还没有书评哦~</div>
           {% endif %}
-          <a class="mt-2 more-item">>>查看更多帖子</a>
+          <a class="mt-2 more-item" href="{% url 'comments' book.id %}">>>查看更多帖子</a>
         </div>
 
         {# 帖子 #}

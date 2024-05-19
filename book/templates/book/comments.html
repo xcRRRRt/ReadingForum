@@ -2,27 +2,131 @@
 {% load static %}
 
 {% block content %}
+  {% csrf_token %}
   <div class="container">
     <div class="mx-5 row">
       {# 面包屑 #}
       <nav aria-label="breadcrumb" class="pt-2">
         <ul class="breadcrumb">
           <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
-          <li class="breadcrumb-item"><a href="{% url 'book_detail' book.id%}">{{ book.title }}</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></li>
           <li class="breadcrumb-item" aria-current="page">短评</li>
         </ul>
       </nav>
       {# 书评 #}
       <div class="col-9">
-        <div class="comments-title">
+        <div class="comments-title mb-2">
           <span>{{ book.title }}</span>&nbsp;&nbsp;
           <span>书评</span>
+          <button id="write-comment-btn" class="btn rounded-0 btn-outline-primary me-4" data-bs-toggle="modal" data-bs-target="#comment-modal">
+            发表书评
+          </button>
+          <div class="modal fade" id="comment-modal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">发表书评</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <textarea id="comment-input" rows="5" maxlength="500" class="form-control"></textarea>
+                </div>
+                <div class="modal-footer">
+                  <button id="send-comment-btn" type="button" class="btn btn-outline-primary">发表</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        {{ comments }}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div id="comments-sort">
+            <a class="pb-2 px-4"
+               {% if paginator.sort_by.time != -1 %}href="{% url 'comments' book.id %}?time=-1" {% endif %}>倒序</a>
+            <a class="pb-2 px-4"
+               {% if paginator.sort_by.time != 1 %}href="{% url 'comments' book.id %}?time=1" {% endif %}>正序</a>
+            <span class="ms-3">第<b>{{ paginator.page }}</b>页</span>
+          </div>
+
+        </div>
+        {% if comments %}
+          {% for comment in comments %}
+            <div id="comments-all" class="border-top">
+              <div class="d-flex justify-content-between my-2">
+                {# 发布者信息 #}
+                <div id="author-info" class="d-flex">
+                  <img class="mt-2" id="avatar-mini" style="width: 28px;height: 28px"
+                       src="
+                           {% if comment.avatar_url %}{{ comment.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                       alt="头像">
+                  <div class="ms-2">
+                    <a href="{% if comment.username == request.session.username %}
+                      	{% url 'userinfo' %}
+                      	{% else %}
+                      	{% url 'userinfo_other' comment.username %}
+                        {% endif %}">{{ comment.username }}
+                    </a>
+                    <div class="text-secondary" style="font-size: 11px">{{ comment.time }}</div>
+                  </div>
+                </div>
+              </div>
+              {# 书评内容 #}
+              <p class="mx-2">{{ comment.comment }}</p>
+            </div>
+          {% endfor %}
+        {% endif %}
+        {# 分页器 #}
+        <div id="mini-paginator" class="mt-4 hstack gap-3 d-flex justify-content-center align-items-center">
+          <a {% if paginator.has_prev == True %}
+            href="{% url 'comments' book.id %}?page=1"
+          {% else %}
+
+          {% endif %} >&lt;&lt;第一页</a>
+          <a {% if paginator.has_prev == True %}
+            href="{% url 'comments' book.id %}?page={{ paginator.previous }}"
+          {% else %}
+
+          {% endif %} >&lt;上一页</a>
+          <a {% if paginator.has_next == True %}
+            href="{% url 'comments' book.id %}?page={{ paginator.next }}"
+          {% else %}
+
+          {% endif %} >下一页&gt;</a>
+          <div>第<b>{{ paginator.page }}</b>页</div>
+        </div>
       </div>
-      <div class="col-3">
-        侧栏
+      {# 侧边栏 #}
+      <div class="col-3 comments-side-bar">
+        <div class="p-2">
+          <img class="mb-2" src="{{ book.cover }}" alt="暂无封面" style="width: 200px">
+          {# 作品信息 #}
+          <div id="book-other-data">
+            <div id="comments-mini-title">
+              <a href="{% url 'book_detail' book.id %}">{{ book.title }}</a>
+            </div>
+            <div>
+              <span>ISBN: </span>
+              <span>{{ book.isbn }}</span>
+            </div>
+            {% for k, v in book.book_data.items %}
+              <div>
+                <span>{{ k }}: </span>
+                <span>{{ v }}</span>
+              </div>
+            {% endfor %}
+          </div>
+          {# 标签 #}
+          <div class="d-flex flex-wrap mt-2" style="position: relative">
+            {% for label in book.label %}
+              <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+                <span>{{ label }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
       </div>
     </div>
   </div>
+  <body>
+    <script src="{% static 'js/write_comment_2.js' %}"></script>
+  </body>
 {% endblock %}

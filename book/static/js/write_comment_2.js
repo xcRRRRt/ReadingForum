@@ -1,13 +1,13 @@
 $(document).ready(function () {
     is_login(function (login) {
         if (login) {
-            write_comment(login);
             get_comment();
         } else {
-            $(".write-comment-btn").attr("href", "#");
-            write_comment(login);
+            $(".write-comment-btn").attr("data-bs-toggle", "");
+            let login_url = $("#navbar-login").attr("href");
+            show_toast("text-bg-warning", "错误提示", "", "用户未登录&nbsp;&nbsp;&nbsp;" + "<a href='" + login_url + "'>立即登录</a>");
         }
-    })
+    });
 });
 
 function is_login(callback) {
@@ -23,20 +23,6 @@ function is_login(callback) {
     })
 }
 
-
-function write_comment(login) {
-    let write_comment_href = $(".write-comment-btn");
-    let comment_input_wrapper = $("#comment-input-wrapper");
-    write_comment_href.on("click", function () {
-        if (!login) {
-            let login_url = $("#navbar-login").attr("href");
-            show_toast("text-bg-warning", "错误提示", "", "用户未登录&nbsp;&nbsp;&nbsp;" + "<a href='" + login_url + "'>立即登录</a>");
-        } else {
-            comment_input_wrapper.css("display", "block");
-        }
-    });
-}
-
 function get_comment() {
     let send_btn = $("#send-comment-btn");
     send_btn.on("click", function () {
@@ -47,7 +33,7 @@ function get_comment() {
             return;
         }
         let spilt = window.location.href.split("/");
-        let book_id = spilt[spilt.length - 2];
+        let book_id = spilt[spilt.length - 3];
         send_comment(book_id, comment, comment_input)
     });
 }

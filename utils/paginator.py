@@ -250,6 +250,10 @@ class PaginatorFromFunction:
         self._page = 1
         self._skip = (self._page - 1) * self._per_page
         self._sort_by = {}
+        self._has_next = False
+        self._has_prev = False
+        self._next = None
+        self._prev = None
 
     @property
     def page(self):
@@ -257,6 +261,8 @@ class PaginatorFromFunction:
 
     @page.setter
     def page(self, value):
+        if not value:
+            value = 1
         self._page = value
         self._skip = (self._page - 1) * self._per_page
 
@@ -279,9 +285,26 @@ class PaginatorFromFunction:
         self._per_page = value
         self._skip = (self._page - 1) * self._per_page
 
-    def __call__(self, **kwargs):
-        objs = self.func(**kwargs, skip=self._skip, sort_by=self.sort_by, limit=self._per_page)
-        return self._clean_data(objs)
+    @property
+    def has_next(self) -> bool:
+        return self._has_next
+
+    @property
+    def has_prev(self) -> bool:
+        return self._page != 1
+
+    @property
+    def previous(self) -> int:
+        return self._page - 1
+
+    @property
+    def next(self) -> int:
+        return self._page + 1
+
+    def from_function(self, **kwargs):
+        objs = self.func(**kwargs, skip=self._skip, sort_by=self.sort_by, limit=self._per_page + 1)
+        self._has_next = True if self._per_page + 1 == len(objs) else False
+        return self._clean_data(objs[:self._per_page])
 
     def _clean_data(self, data):
         """

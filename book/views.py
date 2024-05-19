@@ -61,27 +61,23 @@ def book_comment(request, book_id):
 
 class Comments(views.View):
     """全部评论"""
-    per_page = 15
+    per_page = 10
     paginator = PaginatorFromFunction(book_service.find_book_comments, per_page=per_page)
-    paginator.sort_by = {"time": 1}
+    paginator.sort_by = {"time": -1}
 
     def get(self, request, book_id):
         """
-        request接受参数: limit: int, page: int, field: str, next_state: int
+        request接受参数: limit: int, page: int, time: int {-1, 1}
         """
-        limit = int(request.GET.get('limit', self.per_page))
-        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', self.paginator.per_page))
+        page = int(request.GET.get('page', self.paginator.page))
+        time_sort = int(request.GET.get('time', self.paginator.sort_by.get('time')))
         self.paginator.page = page
         self.paginator.per_page = limit
-        to_sort_fields, next_state = request.session.get('field'), request.session.get('next_state');
-        if to_sort_fields and next_state:
-            self.paginator.sort_by = {to_sort_fields: next_state}
-        to_sort_field, sort_state = request.GET.get('field'), request.GET.get('state')
-        if to_sort_field and sort_state:
-            self.paginator.sort_by = {to_sort_field: int(sort_state)}
-        comments = self.paginator(book_id=book_id)
-        book = book_service.find_book_by_id(book_id, 'isbn', 'title', 'cover', 'label', 'price', 'book_data')
-        return render(request, 'book/comments.html', {"book": book, "comments": comments})
+        self.paginator.sort_by = {"time": time_sort}
+        comments = self.paginator.from_function(book_id=book_id)
+        book = book_service.find_book_by_id(book_id, 'isbn', 'title', 'cover', 'label', 'price', 'book_data', 'label')
+        return render(request, 'book/comments.html', {"book": book, "comments": comments, 'paginator': self.paginator})
 
     def post(self, request, book_id):
         pass

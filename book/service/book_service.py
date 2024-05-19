@@ -1,12 +1,15 @@
 import datetime
 import math
 import random
-from typing import Mapping, Any
+from typing import *
 
 from bson import ObjectId
 from pymongo.results import UpdateResult, InsertOneResult
 
 from utils.db_operation import MongodbOperation
+from user.service.userinfo_service import UserInfoService
+
+userinfo_service = UserInfoService()
 
 
 class BookService:
@@ -72,18 +75,28 @@ class BookService:
                                       })
         return res
 
-    def find_book_comments(self, book_id: str, skip: int, limit: int, sort_by: dict[str, int]):
+    from typing import List, Mapping, Any
+    from bson import ObjectId
+
+    def find_book_comments(self, book_id: str, skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
         pipeline = [
             {'$match': {'_id': ObjectId(book_id)}},
             {'$unwind': '$comments'},
+            {'$replaceRoot': {'newRoot': '$comments'}},
             {'$sort': sort_by},
-            {'$limit': limit},
             {'$skip': skip},
-            {'$project': {'comments': 1}}
+            {'$limit': limit},
         ]
-        comments = self.db.book_aggregate(pipeline)
-        comments = list(comment.get("comments") for comment in comments)
-        return comments
+
+        comments = list(self.db.book_aggregate(pipeline))
+        formatted_comments = []
+
+        for comment in comments:
+            comment['time'] = comment['time'].strftime('%Y年%m月%d日 %H:%M')
+            user_info = userinfo_service.find_userinfo_by_id(comment['user_id'], "avatar_url", "username")
+            comment.update(user_info)
+            formatted_comments.append(comment)
+        return formatted_comments
 
 
 if __name__ == "__main__":

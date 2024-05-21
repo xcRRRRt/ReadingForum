@@ -75,10 +75,15 @@ class BookService:
                                       })
         return res
 
-    from typing import List, Mapping, Any
-    from bson import ObjectId
+    def push_post(self, book_id: str | ObjectId, post_id: str | ObjectId) -> UpdateResult:
+        res = self.db.book_update_one(
+            {'_id': ObjectId(book_id)},
+            {'$push': {'posts': ObjectId(post_id)}}
+        )
+        return res
 
-    def find_book_comments(self, book_id: str, skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
+    def find_book_comments(self, book_id: str, skip: int, limit: int, sort_by: dict[str, int]) -> List[
+        Mapping[str, Any]]:
         pipeline = [
             {'$match': {'_id': ObjectId(book_id)}},
             {'$unwind': '$comments'},
@@ -98,10 +103,25 @@ class BookService:
             formatted_comments.append(comment)
         return formatted_comments
 
+    def find_book_by_isbn_or_title(self, isbn_or_title: str, limit: int, *required_fields):
+        filter_ = {
+            "$or": [
+                {"isbn": {"$regex": isbn_or_title}},
+                {"title": {"$regex": isbn_or_title}},
+            ]
+        }
+        projection = {field: 1 for field in required_fields}
+        books = list(self.db.book_find(filter_, projection).limit(limit))
+        for book in books:
+            book["id"] = str(book["_id"])
+            del book["_id"]
+        return books
+
 
 if __name__ == "__main__":
     book_service = BookService()
     # for i in range(1, 100):
     #     book_service.create_book(isbn=str(random.randint(100000, 999999)), title="图书" + str(i),
     #                              price=round(random.random() * 100, 2), stock=random.randint(1, 100))
-    print(book_service.find_book_comments("66367f4d787d221d08173540", 0, 10, {"time": 1}))
+    # print(book_service.find_book_comments("66367f4d787d221d08173540", 0, 10, {"time": 1}))
+    print(book_service.find_book_by_isbn_or_title("孙子", 3, 'cover', 'title', 'isbn'))

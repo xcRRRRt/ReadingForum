@@ -15,3 +15,17 @@ class PostForm(forms.Form):
     )
     title = forms.CharField(required=False, widget=forms.HiddenInput())
     labels = forms.CharField(required=False, widget=forms.HiddenInput())
+    bound_book = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    def clean_labels(self):
+        labels = self.cleaned_data.get('labels')
+        if labels == '':
+            return None
+        label_list = labels.split(' ')
+        return label_list if label_list else None
+
+    def clean_bound_book(self):
+        bound_book = self.cleaned_data.get('bound_book')
+        if bound_book == '' or not bound_book:
+            return None
+        return bound_book

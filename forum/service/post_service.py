@@ -1,33 +1,45 @@
 from datetime import datetime
-from typing import Optional, Mapping, Any
+from typing import Optional, Mapping, Any, Tuple
 
 from bson import ObjectId
+from pymongo.results import InsertOneResult, UpdateResult
 
+from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
 from utils.db_operation import MongodbOperation
 
 userinfo_service = UserInfoService()
+book_service = BookService()
 
 
 class PostService:
     def __init__(self):
         self.db = MongodbOperation('readingforum', 'post')
 
-    def launch_post(self, content: str, title: str, author: str, labels: Optional[str] = None):
+    def launch_post(self, content: str, title: str, author: str, labels: Optional[list[str]] = None,
+                    bound_book: Optional[str | ObjectId] = None) -> Tuple[InsertOneResult, UpdateResult, UpdateResult]:
         """
         发布帖子后，将帖子数据插入post集合中，并将其_id插入到user集合中的posts中
         :param content: 帖子内容
         :param title: 帖子标题
         :param author: 作者
         :param labels: 帖子标签
-        :return: 是否插入成功
+        :param bound_book: 绑定的书籍
+        :return: post集合插入结果，user_info集合posts push结果，book集合posts push结果
         """
-        label_list = labels.split(" ")
-        insert_post_res = self.db.post_insert_one(
-            {"content": content, "title": title, "author": author, "labels": label_list}
-        )
+        data = {
+            "content": content,
+            "title": title,
+            "author": author,
+            "bound_book": ObjectId(bound_book) if bound_book else None,
+            "labels": labels if labels else None
+        }
+        # Remove keys with None values
+        data = {k: v for k, v in data.items() if v is not None}
+        insert_post_res = self.db.post_insert_one(data)
         update_user_res = userinfo_service.add_post(author, post_id=insert_post_res.inserted_id)
-        return insert_post_res.acknowledged and update_user_res
+        update_book_res = book_service.push_post(bound_book, post_id=insert_post_res.inserted_id)
+        return insert_post_res, update_user_res, update_book_res
 
     def find_post_by_id(self, post_id: str, *required_fields) -> Mapping[str, Any] | None:
         """

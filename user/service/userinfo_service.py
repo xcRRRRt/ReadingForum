@@ -2,6 +2,7 @@ import datetime
 from typing import Mapping, Any
 
 from bson import ObjectId
+from pymongo.results import UpdateResult
 from django.contrib.auth.hashers import make_password, check_password
 
 from utils.datetime_util import get_datetime_by_objectId
@@ -142,7 +143,7 @@ class UserInfoService:
         userinfo["id"] = userinfo["_id"]
         return userinfo
 
-    def add_post(self, username: str, post_id: ObjectId) -> bool:
+    def add_post(self, username: str, post_id: ObjectId) -> UpdateResult:
         """
         用户发布帖子，存储帖子id
         :param username: 用户名
@@ -150,4 +151,4 @@ class UserInfoService:
         :return: 是否存储成功
         """
         res = self.db.userinfo_update_one({'username': username}, {'$push': {'posts': post_id}})
-        return res.acknowledged
+        return res

@@ -1,7 +1,8 @@
 from django import views
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
+from book.service.book_service import BookService
 from forum.forms import PostForm
 from forum.service.post_service import *
 from user.service.userinfo_service import UserInfoService
@@ -12,6 +13,7 @@ from utils.datetime_util import get_datetime_by_objectId
 userinfo_service = UserInfoService()
 verification_service = VerificationService()
 post_service = PostService()
+book_service = BookService()
 
 
 def homepage(request):
@@ -29,7 +31,9 @@ class EditorView(views.View):
             post_service.launch_post(content=form.cleaned_data.get("content"),
                                      title=form.cleaned_data.get("title"),
                                      labels=form.cleaned_data.get("labels"),
-                                     author=request.session.get("username"), )
+                                     author=request.session.get("username"),
+                                     bound_book=form.cleaned_data.get("bound_book")
+                                     )
             return redirect("/")
         return render(request, "forum/editor.html", {"form": form})
 
@@ -69,3 +73,9 @@ class PostDetailView(views.View):
             else:
                 pass
         return HttpResponse()
+
+
+def search_book(request):
+    query = request.GET.get("q")
+    books = book_service.find_book_by_isbn_or_title(query, 3, 'cover', 'title', 'isbn')
+    return JsonResponse({"books": books})

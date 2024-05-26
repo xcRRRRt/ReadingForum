@@ -34,8 +34,9 @@ class EditorView(views.View):
                                      author=request.session.get("username"),
                                      bound_book=form.cleaned_data.get("bound_book")
                                      )
-            return redirect("/")
-        return render(request, "forum/editor.html", {"form": form})
+            return JsonResponse({"success": True})
+        print(form.errors)
+        return JsonResponse({"errors": form.errors, "content_with_hint": form.cleaned_data.get("content")}, safe=False)
 
 
 class PostDetailView(views.View):

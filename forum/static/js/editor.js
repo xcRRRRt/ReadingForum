@@ -1,36 +1,48 @@
 $(document).ready(function () {
     $(".django-ckeditor-widget").css({'width': '100%'});
+    CKEDITOR.instances.id_content.on("instanceReady", function () {
+        $("#cke_1_contents").css("height", "500px");
+    });
     $("#bound-book").hide();
     bind_book();
     cancel_bind();
-
 
     // 文章标签
     let labels_all = $("#labels-chosen");
     labels_all.on("click", "button", function () {
         $(this).parent().remove();
     });
-    $("#label-add").click(function () {
-        let input = $(this).prev();
-        let input_val = input.val();
-        if (input_val.trim().length !== 0) {
-            if ($("#labels-chosen div").length >= 6) {
-                show_toast("text-bg-warning", "提示", "", "标签太多啦！")
-                return;
-            }
-            const label = $("<div class=\"border rounded-pill px-2 bg-secondary-subtle me-2 mb-2\"></div>");
-            const remove = $("<button type='button'>×</button>");
-            const span = $("<span></span>")
-            span.text(input_val);
-            label.append(span, remove);
-            labels_all.append(label);
-            input.val("");
-        }
-    });
+    $("#label-add").click(add_label);
 
+    // 提交表单
+    submit_form();
+})
+
+function toggle_submit_btn() {
+    let submit_btn = $("#ckeditor-submit");
+
+    let spinner = submit_btn.children().eq(0);
+    let text = submit_btn.children().eq(1);
+
+    spinner.toggle(); // 切换 spinner 的显示状态
+    if (text.text() === "发布") {
+        text.text("正在发布");
+        submit_btn.prop('disabled', true);
+    } else {
+        text.text("发布");
+        submit_btn.prop('disabled', false);
+    }
+}
+
+
+function submit_form() {
+    let form = $("#ckeditor-form");
     // 发布文章
     $("#ckeditor-submit").click(function (event) {
         event.preventDefault();
+        for (let instance in CKEDITOR.instances) {
+            CKEDITOR.instances[instance].updateElement();
+        }
         // 标题
         let title_input = $("#editor-post-title");
         let title = title_input.val().trim();
@@ -39,6 +51,10 @@ $(document).ready(function () {
             title_input.next().text("应在5-50个字符之间(当前字符数" + title.length + ")")
             return;
         }
+
+        toggle_submit_btn();
+
+
         title_input.attr("class", "form-control");
         $("#id_title").val(title);
         // 标签
@@ -54,19 +70,78 @@ $(document).ready(function () {
             let href_split = href.split("/");
             $("#id_bound_book").val(href_split[href_split.length - 2]);
         }
-        $("#ckeditor-form").submit();
-    })
 
-    // 提交表单反馈
-    let feedback = $("#editor-invalid-feedback").text();
-    if (feedback.trim().length !== 0) {
-        let hint = "";
-        if (feedback.trim() === "这个字段是必填项。") {
-            hint = "文章空空如也"
-        }
-        show_toast("text-bg-danger", "发布失败", "", hint);
+        $.ajax({
+            url: form.attr("action"),
+            type: form.attr("method"),
+            data: form.serialize(),
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            success: function (res) {
+                if (res['success']) {
+                    window.location.href = "/?show_toast=true&head_bg_class=bg-success&strong_text=发布成功&body_text=帖子发布成功";
+                } else {
+                    console.log(res)
+                    toggle_submit_btn();
+                    let errors = res['errors'];
+                    let content_with_hint = res['content_with_hint'];
+                    replace_content(content_with_hint);
+                    let content_errors = errors['content'];
+                    show_errors(content_errors);
+                }
+            },
+        });
+
+        // $("#ckeditor-form").submit();
+    });
+}
+
+// 妈妈呀终于放上去了
+function replace_content(new_content) {
+    if (new_content) {
+        CKEDITOR.instances['id_content'].setData(new_content);
+        let doc = $("iframe")[0].contentWindow.document
+        let content = $(doc).find("body");
+        content.html(new_content);
+        let sensitive_words = content.find(".sensitive-word")
+        sensitive_words.each(function (index, elem) {
+            blink(elem);
+        })
     }
-})
+}
+
+function blink(elem) {
+    $(elem).fadeOut(500, function () {
+        $(this).fadeIn(500, function () {
+            blink(elem); // 循环调用blink函数
+        });
+    });
+}
+
+function show_errors(errors) {
+    for (let i = 0; i < errors.length; i++) {
+        show_toast("text-bg-warning", "提示", "", errors[i])
+    }
+}
+
+function add_label() {
+    let input = $("#label-add").prev();
+    let input_val = input.val();
+    if (input_val.trim().length !== 0) {
+        if ($("#labels-chosen div").length >= 6) {
+            show_toast("text-bg-warning", "提示", "", "标签太多啦！");
+            return;
+        }
+        const label = $("<div class=\"border rounded-pill px-2 bg-secondary-subtle me-2 mb-2\"></div>");
+        const remove = $("<button type='button'>×</button>");
+        const span = $("<span></span>");
+        span.text(input_val);
+        label.append(span, remove);
+        $("#labels-chosen").append(label);
+        input.val("");
+    }
+}
 
 function bind_book() {
     let book_bind_fake = $('#book-bind-fake');
@@ -102,6 +177,7 @@ function bind_book() {
         }
     })
 }
+
 
 function query_book(query) {
     $.ajax({

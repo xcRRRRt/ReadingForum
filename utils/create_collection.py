@@ -38,6 +38,7 @@ if __name__ == "__main__":
     print(collection_name)
     if collection_name not in db.list_collection_names():
         collection = db.create_collection(collection_name)
+        res = collection.create_index([('title_tokenized', 'text'), ('content_tokenized', 'text')])
         print(collection.index_information())
 
     # 书籍collection

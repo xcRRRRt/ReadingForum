@@ -7,6 +7,7 @@ from pymongo.results import InsertOneResult, UpdateResult
 from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
 from utils.db_operation import MongodbOperation
+from utils.tokenize import Tokenizer
 
 userinfo_service = UserInfoService()
 book_service = BookService()
@@ -27,9 +28,14 @@ class PostService:
         :param bound_book: 绑定的书籍
         :return: post集合插入结果，user_info集合posts push结果，book集合posts push结果
         """
+        title_tokenized = Tokenizer.tokenize(title)
+        content_tokenized = Tokenizer.tokenize(content)
+
         data = {
-            "content": content,
             "title": title,
+            "title_tokenized": title_tokenized,
+            "content": content,
+            "content_tokenized": content_tokenized,
             "author": author,
             "bound_book": ObjectId(bound_book) if bound_book else None,
             "labels": labels if labels else None
@@ -39,6 +45,7 @@ class PostService:
         insert_post_res = self.db.post_insert_one(data)
         update_user_res = userinfo_service.add_post(author, post_id=insert_post_res.inserted_id)
         update_book_res = book_service.push_post(bound_book, post_id=insert_post_res.inserted_id)
+        print(111)
         return insert_post_res, update_user_res, update_book_res
 
     def find_post_by_id(self, post_id: str, *required_fields) -> Mapping[str, Any] | None:

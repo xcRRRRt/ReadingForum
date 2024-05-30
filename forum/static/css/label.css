@@ -1,0 +1,18 @@
+.label-wrapper {
+    font-size: 13px;
+    color: #494949;
+    background: white;
+    text-decoration: none;
+    border: 1px solid gray;
+    transition-property: background-color, transform, border-color;
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+    /*transition-timing-function: ease;*/
+}
+
+.label-wrapper:hover {
+    color: #eeeeee;
+    background-color: #177ed2;
+    border-color: #177ed2;
+    transform: scale(1.1, 1.1);
+}

@@ -141,9 +141,9 @@ class Paginator:
                 self._filter,  # 查询条件
                 self._required_fields  # 需求字段
             ).
+            sort(_sort_by_real).  # 排序，默认为按照id降序排序
             skip(skip).  # 跳过多少
-            limit(self._per_page).  # 每页多少个条目
-            sort(_sort_by_real)  # 排序，默认为按照id降序排序
+            limit(self._per_page)  # 每页多少个条目
         )
         return self._clean_data(objs)
 

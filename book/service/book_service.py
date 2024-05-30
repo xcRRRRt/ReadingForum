@@ -103,7 +103,7 @@ class BookService:
             formatted_comments.append(comment)
         return formatted_comments
 
-    def find_book_by_isbn_or_title(self, isbn_or_title: str, limit: int, *required_fields):
+    def find_book_by_isbn_or_title(self, isbn_or_title: str, *required_fields, skip: int, limit: int, sort_by=None) -> List[dict[str, Any]]:
         filter_ = {
             "$or": [
                 {"isbn": {"$regex": isbn_or_title}},
@@ -111,7 +111,22 @@ class BookService:
             ]
         }
         projection = {field: 1 for field in required_fields}
-        books = list(self.db.book_find(filter_, projection).limit(limit))
+        cursor = self.db.book_find(filter_, projection)
+        if sort_by:
+            cursor = cursor.sort(sort_by)
+        cursor = cursor.skip(skip).limit(limit)
+        books = list(cursor)
+        for book in books:
+            book["id"] = str(book["_id"])
+            del book["_id"]
+        return books
+
+    def find_book_by_labels(self, labels: list[str], skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
+        filter_ = {"label": {"$all": labels}}
+        cursor = self.db.book_find(filter_)  # 惰性查询
+        if sort_by:
+            cursor = cursor.sort(sort_by)
+        books = list(cursor.limit(limit).skip(skip))
         for book in books:
             book["id"] = str(book["_id"])
             del book["_id"]
@@ -124,4 +139,5 @@ if __name__ == "__main__":
     #     book_service.create_book(isbn=str(random.randint(100000, 999999)), title="图书" + str(i),
     #                              price=round(random.random() * 100, 2), stock=random.randint(1, 100))
     # print(book_service.find_book_comments("66367f4d787d221d08173540", 0, 10, {"time": 1}))
-    print(book_service.find_book_by_isbn_or_title("孙子", 3, 'cover', 'title', 'isbn'))
+    print(book_service.find_book_by_isbn_or_title("孙子", skip=0, limit=10, sort_by={}))
+    # print(book_service.find_book_by_labels(['102', '96'], 0, 10, {}))

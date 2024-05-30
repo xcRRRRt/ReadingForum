@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Mapping, Any, Tuple
+from typing import *
 
 from bson import ObjectId
 from pymongo.results import InsertOneResult, UpdateResult
@@ -17,7 +17,7 @@ class PostService:
     def __init__(self):
         self.db = MongodbOperation('readingforum', 'post')
 
-    def launch_post(self, content: str, title: str, author: str, labels: Optional[list[str]] = None,
+    def launch_post(self, content: str, title: str, author: str | ObjectId, labels: Optional[list[str]] = None,
                     bound_book: Optional[str | ObjectId] = None) -> Tuple[InsertOneResult, UpdateResult, UpdateResult]:
         """
         发布帖子后，将帖子数据插入post集合中，并将其_id插入到user集合中的posts中
@@ -36,7 +36,7 @@ class PostService:
             "title_tokenized": title_tokenized,
             "content": content,
             "content_tokenized": content_tokenized,
-            "author": author,
+            "author": ObjectId(author),
             "bound_book": ObjectId(bound_book) if bound_book else None,
             "labels": labels if labels else None
         }
@@ -45,10 +45,9 @@ class PostService:
         insert_post_res = self.db.post_insert_one(data)
         update_user_res = userinfo_service.add_post(author, post_id=insert_post_res.inserted_id)
         update_book_res = book_service.push_post(bound_book, post_id=insert_post_res.inserted_id)
-        print(111)
         return insert_post_res, update_user_res, update_book_res
 
-    def find_post_by_id(self, post_id: str, *required_fields) -> Mapping[str, Any] | None:
+    def find_post_by_id(self, post_id: str, *required_fields) -> dict[str, Any] | None:
         """
         使用_id寻找帖子指定字段的值
         :param post_id: ObjectId
@@ -133,7 +132,49 @@ class PostService:
             return {}
         return {"user_post_like": True} if post.get("likes")[0].get("like") else {"user_post_unlike": True}
 
+    def find_post_by_labels(self, labels: list[str], skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
+        """
+
+        :param labels:
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        filter_ = {"labels": {"$all": labels}}
+        cursor = self.db.post_find(filter_)
+        if sort_by:
+            cursor = cursor.sort(sort_by)
+        posts = list(cursor.limit(limit).skip(skip))
+        for post in posts:
+            post["id"] = str(post["_id"])
+            del post["_id"]
+        return posts
+
+    def text_search_posts(self, query: str, skip: int = 0, limit: int = 0, sort_by: dict[str, Any] = None) -> List[dict[str, Any]]:
+        """
+
+        :param query:
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        query = Tokenizer.tokenize(query)
+        if sort_by is None:
+            sort_by = {}
+        sort_by.update({"score": {"$meta": "textScore"}})
+        filter_ = {"$text": {"$search": query}}
+        cursor = self.db.post_find(filter_, {"score": {"$meta": "textScore"}, "title_tokenized": 0, "content_tokenized": 0}).sort(sort_by)
+        posts = list(cursor.skip(skip).limit(limit))
+        for post in posts:
+            post["id"] = str(post["_id"])
+            del post["_id"]
+        return posts
+
 
 if __name__ == '__main__':
     post_service = PostService()
-    print(post_service.have_user_liked_post("65f7e2bd9b0a0c39127c1cea", "testuser1"))
+    # print(post_service.have_user_liked_post("65f7e2bd9b0a0c39127c1cea", "testuser1"))
+    # print(post_service.find_post_by_labels(['测试'], 0, 10, {}))
+    print(post_service.text_search_posts("丰乳肥臀", limit=5))

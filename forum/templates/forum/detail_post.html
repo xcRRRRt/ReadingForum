@@ -13,8 +13,8 @@
                  src="{% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                  alt="头像">
             <div class="ms-3">
-              <a href="{% url 'userinfo_other' post.author %}">
-                {{ post.author }}
+              <a href="{% url 'userinfo_other' author %}">
+                {{ author }}
               </a>
               <div class="text-secondary">
                 {{ time }}

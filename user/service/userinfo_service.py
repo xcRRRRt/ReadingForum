@@ -1,5 +1,5 @@
 import datetime
-from typing import Mapping, Any
+from typing import Mapping, Any, List
 
 from bson import ObjectId
 from pymongo.results import UpdateResult
@@ -131,12 +131,36 @@ class UserInfoService:
         userinfo["id"] = userinfo["_id"]
         return userinfo
 
+    def find_userinfos_by_username(self, username: str, *required_fields, skip: int = 0, limit: int = 5,
+                                   sort_by=None) -> List[Mapping[str, Any]]:
+        """
+
+        :param username:
+        :param required_fields:
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        if sort_by is None:
+            sort_by = {}
+        projection = {field: 1 for field in required_fields}  # 创建投影，仅包含需要的字段
+        cursor = self.db.userinfo_find({'username': {"$regex": username}}, projection=projection)
+        if sort_by:
+            cursor = cursor.sort(sort_by)
+        cursor = cursor.skip(skip).limit(limit)
+        userinfos = list(cursor)
+        for userinfo in userinfos:
+            userinfo["id"] = str(userinfo["_id"])
+            del userinfo["_id"]
+        return userinfos
+
     def find_userinfo_by_id(self, user_id: str | ObjectId, *required_fields) -> Mapping[str, Any] | None:
         """
 
         """
         projection = {field: 1 for field in required_fields}  # 创建投影，仅包含需要的字段
-        userinfo = self.db.userinfo_find_one({'_id': user_id}, projection=projection)
+        userinfo = self.db.userinfo_find_one({'_id': ObjectId(user_id)}, projection=projection)
         for k, v in userinfo.items():
             if isinstance(v, datetime.datetime):
                 userinfo[k] = v.date()
@@ -152,3 +176,8 @@ class UserInfoService:
         """
         res = self.db.userinfo_update_one({'username': username}, {'$push': {'posts': post_id}})
         return res
+
+
+if __name__ == '__main__':
+    userinfo_service = UserInfoService()
+    print(userinfo_service.find_userinfos_by_username("1"))

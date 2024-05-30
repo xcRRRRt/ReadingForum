@@ -1,0 +1,6 @@
+.post-content-truncated img {
+    width: 50%;
+    height: 50%;
+    /*max-height: 300px;*/
+    object-fit: contain;
+}

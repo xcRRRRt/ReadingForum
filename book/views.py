@@ -4,14 +4,16 @@ from django.urls import reverse
 from django import views
 
 from book.service.book_service import BookService
+from forum.service.post_service import PostService
 from user.service.userinfo_service import UserInfoService
 from utils.paginator import Paginator, PaginatorFromFunction
+from utils.datetime_util import get_datetime_by_objectId
 
 # Create your views here.
 
 book_service = BookService()
 userinfo_service = UserInfoService()
-
+post_service = PostService()
 
 class BookListView(views.View):
     def get(self, request, *args, **kwargs):
@@ -29,22 +31,48 @@ class BookDetailView(views.View):
 
     def get(self, request, book_id):
         book = book_service.find_book_by_id(book_id, 'isbn', 'title', 'cover', 'label', 'comments', 'introduction',
-                                            'book_data', 'price', 'status', 'stock', map_fields=True)
-        comments = []
+                                            'book_data', 'price', 'status', 'stock', 'posts', map_fields=True)
+        comments, posts = [], []
         if book.get("comments"):
-            _comments = book.get("comments") if self.comments_asc else list(reversed(book.get("comments")))
-            for _comment in _comments[: self.comments_num]:
-                user_id = _comment["user_id"]
-                user = userinfo_service.find_userinfo_by_id(user_id, "username", "avatar_url")
-                comment = {"username": user.get("username"), "avatar_url": user.get("avatar_url"), "user_id": user_id,
-                           "comment": _comment.get("comment"), "time": _comment.get("time")}
-                comments.append(comment)
+            comments = self._get_comments(book.get('comments'))
+        if book.get("posts"):
+            posts = self._get_posts(book.get("posts"))
 
-        return render(request, 'book/book_detail.html', {"book": book, "comments": comments,
-                                                         "test": "这部作品的悬疑成分没有之前读的几部作品那么浓烈，但是，留给读者回味的空间依然很足。本来，个人以为作者会在这个设定的基础上，通过身份的变与不变，来一场刺激的本格推理之旅。谜底揭晓时，不免有一丝惆怅，期待中的罪案，变成一系列琐碎但耐人寻味的小故事。其实，从书中的设定来看，这些小故事虽然违反规定，但有些很难上升到犯罪的角度。但正是这些灰色地带，却凸显了人类在面对问题时的种种弱点。"})
+        return render(request, 'book/book_detail.html', {"book": book, "comments": comments, "posts": posts})
 
-    def post(self, request, book_id):
+    def post(self, request):
         pass
+
+    def _get_comments(self, _comments: list):
+        length = len(_comments)
+        comments = []
+        while len(comments) < min(length, self.comments_num):
+            comment = _comments.pop(0)
+            user_id = comment.get("user_id")
+            user = userinfo_service.find_userinfo_by_id(user_id, "username", "avatar_url")
+            comment['username'] = user.get("username")
+            comment['avatar_url'] = user.get("avatar_url")
+            comment['user_id'] = user_id
+            comments.append(comment)
+        return comments
+
+    def _get_posts(self, post_ids: list):
+        length = len(post_ids)
+        posts = []
+        while len(posts) < min(length, self.post_num):
+            post_id = post_ids.pop(0)
+            post = post_service.find_post_by_id(post_id, 'author', 'title', 'content')
+            if not post:
+                continue
+            author = userinfo_service.find_userinfo_by_id(post.get('author'), "username", "avatar_url")
+            post['author'] = author.get('username')
+            post['author_avatar'] = author.get("avatar_url")
+            post['post_time'] = get_datetime_by_objectId(post['_id'])
+            post['id'] = post["_id"]
+            del post['_id']
+            posts.append(post)
+        return posts
+
 
 
 def book_comment(request, book_id):
@@ -52,7 +80,6 @@ def book_comment(request, book_id):
     书本详情页评论
     """
     comment = request.POST.get('comment')
-    # TODO 屏蔽词
     user_id = request.session.get('user_id')
     if book_service.push_comment(book_id, user_id, comment).acknowledged:
         return JsonResponse({"success": True})

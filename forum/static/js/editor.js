@@ -80,7 +80,7 @@ function submit_form() {
             },
             success: function (res) {
                 if (res['success']) {
-                    alert(generate_toast_url("/", "bg-success", "发布成功", "", "帖子发布成功"))
+                    // alert(generate_toast_url("/", "bg-success", "发布成功", "", "帖子发布成功"))
                     window.location.href = generate_toast_url("/", "bg-success", "发布成功", "", "帖子发布成功");
                     // window.location.href = "/?show_toast=true&head_bg_class=bg-success&strong_text=发布成功&body_text=帖子发布成功";
                 } else {

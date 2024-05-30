@@ -40,7 +40,7 @@ class Sensitive:
             replacement = f'<span class="sensitive-word">{sensi_word}</span>'
             filtered_text = re.sub(pattern, replacement, filtered_text)
         filtered_text = filtered_text.replace("<span class='sensitive-word'></span>", "")
-        print(filtered_text, '<span class="sensitive-word"' in filtered_text)
+        # print(filtered_text, '<span class="sensitive-word"' in filtered_text)
         return filtered_text, '<span class="sensitive-word"' in filtered_text
 
 

@@ -1,0 +1,79 @@
+{% extends 'base_forum.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="container">
+    <div class="mx-5 row">
+
+      {# 面包屑 #}
+      <nav aria-label="breadcrumb" class="pt-2">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></li>
+          <li class="breadcrumb-item" aria-current="page">帖子</li>
+        </ul>
+      </nav>
+
+      {# 帖子 #}
+      <div class="col-9">
+
+        <div class="comments-title mb-2">
+          <span>{{ book.title }}</span>
+          <span class="ms-3">帖子</span>
+          <a href="{% url 'editor' %}?bind={{ book.id }}" class="btn rounded-0 btn-outline-primary me-4 float-end">发表帖子</a>
+        </div>
+
+        <div class="align-items-center pb-2 border-bottom">
+          <a class="px-4 sort-btn sort-btn-up sort-btn-active" href="#">评论数量正序</a>
+          <a class="px-4 sort-btn sort-btn-down" href="#">评论数量倒序</a>
+          <a class="px-4 sort-btn sort-btn-up" href="#">时间正序</a>
+          <a class="px-4 sort-btn sort-btn-down" href="#">时间倒序</a>
+          <span class="px-4 ms-3">第<b>n</b>页</span>
+        </div>
+
+        {% if posts %}
+          {% for post in posts %}
+            <div>
+              <div class="border-top pt-2">
+                {# 发布者信息 #}
+                <div id="author-info" class="d-flex">
+                  <img class="mt-2" id="avatar-mini" style="width: 28px;height: 28px"
+                       src="{% if post.avatar_url %}{{ post.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                       alt="头像">
+                  <div class="ms-2">
+                    <a href="{% if post.author == request.session.username %}
+                      	{% url 'userinfo' %}
+                      	{% else %}
+                      	{% url 'userinfo_other' post.author %}
+                        {% endif %}">{{ post.author }}
+                    </a>
+                    <div class="text-secondary" style="font-size: 11px">{{ post.time }}</div>
+                  </div>
+                </div>
+
+                <div class="mx-2 mt-2">
+                  <a class="post-title-mini fs-6" href="{% url 'detail_post' post.id %}">
+                    <span>{{ post.title }}</span>
+                  </a>
+                </div>
+
+                <div class="mt-1 mx-2 post-content-truncated d-flex flex-column" style="font-size: 13px">
+                  {{ post.content|safe|truncatechars:200 }}
+                </div>
+
+              </div>
+
+            </div>
+          {% endfor %}
+        {% else %}
+
+        {% endif %}
+
+      </div>
+
+
+      {% include 'book/side_bar_book.html' %}
+
+    </div>
+  </div>
+{% endblock %}

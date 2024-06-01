@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django import views
+from django.views.generic import TemplateView
 
 from book.service.book_service import BookService
 from forum.service.post_service import PostService
@@ -14,6 +15,7 @@ from utils.datetime_util import get_datetime_by_objectId
 book_service = BookService()
 userinfo_service = UserInfoService()
 post_service = PostService()
+
 
 class BookListView(views.View):
     def get(self, request, *args, **kwargs):
@@ -46,8 +48,8 @@ class BookDetailView(views.View):
     def _get_comments(self, _comments: list):
         length = len(_comments)
         comments = []
-        while len(comments) < min(length, self.comments_num):
-            comment = _comments.pop(0)
+        while len(comments) < min(length, self.comments_num) and len(_comments) != 0:
+            comment = _comments.pop(-1)
             user_id = comment.get("user_id")
             user = userinfo_service.find_userinfo_by_id(user_id, "username", "avatar_url")
             comment['username'] = user.get("username")
@@ -59,8 +61,8 @@ class BookDetailView(views.View):
     def _get_posts(self, post_ids: list):
         length = len(post_ids)
         posts = []
-        while len(posts) < min(length, self.post_num):
-            post_id = post_ids.pop(0)
+        while len(posts) < min(length, self.post_num) and len(post_ids) != 0:
+            post_id = post_ids.pop(-1)
             post = post_service.find_post_by_id(post_id, 'author', 'title', 'content')
             if not post:
                 continue
@@ -74,7 +76,6 @@ class BookDetailView(views.View):
         return posts
 
 
-
 def book_comment(request, book_id):
     """
     书本详情页评论
@@ -86,7 +87,7 @@ def book_comment(request, book_id):
     return JsonResponse({"success": False})
 
 
-class Comments(views.View):
+class CommentsListView(views.View):
     """全部评论"""
     per_page = 10
     paginator = PaginatorFromFunction(book_service.find_book_comments, per_page=per_page)
@@ -103,8 +104,36 @@ class Comments(views.View):
         self.paginator.per_page = limit
         self.paginator.sort_by = {"time": time_sort}
         comments = self.paginator.from_function(book_id=book_id)
-        book = book_service.find_book_by_id(book_id, 'isbn', 'title', 'cover', 'label', 'price', 'book_data', 'label')
+        book = book_service.find_book_by_id(book_id, 'isbn', 'title', 'cover', 'label', 'price', 'book_data')
         return render(request, 'book/comments.html', {"book": book, "comments": comments, 'paginator': self.paginator})
 
     def post(self, request, book_id):
         pass
+
+
+class PostsListView(TemplateView):
+    template_name = 'book/posts.html'
+    paginator = PaginatorFromFunction(post_service.find_book_posts, per_page=10)
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.book_id = kwargs.get('book_id')
+        self.book = book_service.find_book_by_id(self.book_id, 'isbn', 'title', 'cover', 'posts', 'price', 'book_data')
+        limit = int(request.GET.get('limit', self.paginator.per_page))
+        page = int(request.GET.get('page', self.paginator.page))
+        sort = request.GET.get('sort', self.paginator.sort_by.get('sort', ''))
+        if sort not in ['timedesc', 'timeasc', 'replycountdesc', 'replycountasc']:
+            sort = 'timedesc'
+        print(1)
+
+        self.paginator.page = page
+        self.paginator.per_page = limit
+        self.paginator.sort_by = {'sort': sort}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        posts = self.paginator.from_function(book=self.book)
+        context['book'] = self.book
+        context['posts'] = posts
+        print(posts)
+        return context

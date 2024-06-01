@@ -19,7 +19,7 @@
             <span class="my-2 fs-6 fw-bolder text-muted">用户</span>
             {% if show_part == 'all' %}
               <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=user">查看更多>></a>
-            {% endif %} 
+            {% endif %}
             <div class="m-2">
               {% if users %}
                 <div class="row">
@@ -59,25 +59,25 @@
             <span class="my-2 fs-6 fw-bolder text-muted">图书</span>
             {% if show_part == "all" %}
               <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=book">查看更多>></a>
-            {% endif %} 
+            {% endif %}
             <div class="m-2">
               {% if books %}
                 <div class="row">
                   {% for book in books %}
                     <div class="col-3 position-relative">
-                      <div class="border rounded-3 mb-2">
+                      <div class="border rounded-3 mb-2 book-block">
                         {# 书籍封面 #}
                         <img class="rounded-top-3 object-fit-cover" src="
                          {% if book.cover %}
                             {{ book.cover }}
                          {% else %}
                             {% static 'img/default_book_cover.png' %}
-                         {% endif %} 
+                         {% endif %}
                           " style="width: 100%;height: 270px" alt="书籍封面">
                         {# 书籍信息 #}
-                        <div class="mx-2 text-muted">
+                        <div class="mx-2 mt-2 text-muted">
                           <div class="fs-6">
-                            <a class="text-body text-decoration-none stretched-link"
+                            <a class="text-body text-decoration-none"
                                href="{% url 'book_detail' book.id %}">{{ book.title }}</a>
                           </div>
                           <div>
@@ -85,6 +85,17 @@
                             <span>{{ book.isbn }}</span>
                           </div>
                         </div>
+                      
+                        <div class="d-flex flex-wrap px-2 mt-2 label-all" style="position: relative">
+                          {% if book.label %}
+                            {% for label in book.label %}
+                              <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+                                <span>{{ label }}</span>
+                              </div>
+                            {% endfor %}
+                          {% endif %} 
+                        </div>
+                      
                       </div>
                     </div>
                   {% endfor %}
@@ -104,11 +115,11 @@
             <span class="my-2 fs-6 fw-bolder text-muted">帖子</span>
             {% if show_part == 'all' %}
               <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=post">查看更多>></a>
-            {% endif %} 
+            {% endif %}
             <div>
               {% if posts %}
                 {% for post in posts %}
-                  <div class="m-2 p-1 border rounded-3">
+                  <div class="m-2 p-1 border rounded-3 post-block">
 
                     {# 发布者信息 #}
                     <div id="author-info" class="d-flex ms-3 mt-2">
@@ -134,6 +145,16 @@
                     <div class="ms-3 post-content-truncated d-flex flex-column">
                       {{ post.content|safe|truncatechars:200 }}
                     </div>
+                  
+                    <div class="d-flex flex-wrap px-2 label-all" style="position: relative">
+                      {% if post.labels %}
+                        {% for label in post.labels %}
+                          <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+                            <span>{{ label }}</span>
+                          </div>
+                        {% endfor %}
+                      {% endif %} 
+                    </div>
 
                   </div>
                 {% endfor %}
@@ -145,12 +166,12 @@
             </div>
           </div>
         {% endif %}
-      
+
       </div>
-    
+
       <div class="col-3">
         {# 标签 #}
-        <div>           
+        <div>
           <div class="my-2 fs-6 text-muted fw-bolder">标签</div>
           <div class="d-flex flex-wrap">
             {% for label in labels %}
@@ -161,9 +182,9 @@
           </div>
         </div>
 
-      
+
       </div>
-    
+
     </div>
   </div>
 {% endblock %}

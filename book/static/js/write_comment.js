@@ -1,3 +1,5 @@
+// 书籍详情页写评论
+
 $(document).ready(function () {
     is_login(function (login) {
         if (login) {

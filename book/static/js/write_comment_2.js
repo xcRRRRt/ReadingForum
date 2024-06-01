@@ -1,3 +1,5 @@
+// 书评详情页发表书评
+
 $(document).ready(function () {
     is_login(function (login) {
         if (login) {
@@ -5,7 +7,10 @@ $(document).ready(function () {
         } else {
             $(".write-comment-btn").attr("data-bs-toggle", "");
             let login_url = $("#navbar-login").attr("href");
-            show_toast("text-bg-warning", "错误提示", "", "用户未登录&nbsp;&nbsp;&nbsp;" + "<a href='" + login_url + "'>立即登录</a>");
+            $("#comment-modal").on("show.bs.modal", function (event) {
+                event.preventDefault();
+                show_toast("text-bg-warning", "错误提示", "", "用户未登录&nbsp;&nbsp;&nbsp;" + "<a href='" + login_url + "'>立即登录</a>");
+            });
         }
     });
 });

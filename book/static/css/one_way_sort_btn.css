@@ -1,0 +1,63 @@
+.sort-btn {
+    color: #888888;
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.sort-btn:after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 7px solid transparent;
+    margin-right: 10px;
+    top: 50%;
+}
+
+.sort-btn-up:after {
+    transform: translateY(-100%);
+}
+
+.sort-btn-down:after {
+    transform: translateY(-50%);
+}
+
+.sort-btn:hover {
+    color: #135990;
+    border-bottom: #177ed2 4px solid;
+}
+
+.sort-btn-up:hover:after {
+    border-bottom-color: #177ed2;
+}
+
+.sort-btn-down:hover:after {
+    border-top-color: #177ed2;
+}
+
+.sort-btn-active {
+    color: #494949;
+    border-bottom: #494949 solid 4px;
+}
+
+.sort-btn-active:hover {
+    color: #494949;
+    border-bottom-color: #494949;
+}
+
+.sort-btn-up.sort-btn-active:after {
+    border-bottom-color: #494949;
+}
+
+.sort-btn-down.sort-btn-active:after {
+    border-top-color: #494949;
+}
+
+.sort-btn-up.sort-btn-active:hover:after {
+    border-bottom-color: #494949;
+}
+
+.sort-btn-down.sort-btn-active:hover:after {
+    border-top-color: #494949;
+}

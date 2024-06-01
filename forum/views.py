@@ -25,7 +25,13 @@ def homepage(request):
 class EditorView(views.View):
     def get(self, request):
         form = PostForm()
-        return render(request, "forum/editor.html", {"form": form})
+        bound_book = None
+        if request.GET.get('bind'):
+            bound_book_id = request.GET.get('bind')
+            print(bound_book_id)
+            bound_book = book_service.find_book_by_id(bound_book_id, 'title', 'isbn', 'cover')
+            print(bound_book)
+        return render(request, "forum/editor.html", {"form": form, "bound_book": bound_book})
 
     def post(self, request):
         form = PostForm(request.POST)
@@ -83,52 +89,6 @@ def search_book(request):
     return JsonResponse({"books": books})
 
 
-# def search(request):
-#     query: str = request.GET.get("q")
-#     show_part: str = request.GET.get("show_part", "all")
-#     page: int = request.GET.get("page", 4)
-#     skip: int = request.GET.get("skip", 0)
-#     # 展示的部分
-#     if show_part not in ['user', 'book', 'post', 'all']:
-#         show_part = 'all'
-#     # 查询
-#     if query:
-#         queries = query.split(" ")
-#     else:
-#         return HttpResponse()
-#
-#     # 查询用户（用户名）、书籍（ISBN、书名）、帖子（全文检索）、标签
-#     users = userinfo_service.find_userinfos_by_username("".join(queries), limit=4)
-#     books = book_service.find_book_by_isbn_or_title("".join(queries), limit=4)
-#     posts = post_service.text_search_posts(" ".join(queries), limit=5)
-#
-#     # 为user补全数据
-#     users = list(filter(lambda user: user['username'] != request.session.get("username"), users))
-#     print(users)
-#     print(books)
-#
-#     # 为post补全数据
-#     for post in posts:
-#         author_obj_id = post.get("author")
-#         print(author_obj_id)
-#         author_info = userinfo_service.find_userinfo_by_id(author_obj_id, 'username', 'avatar_url')
-#         post["author_name"] = author_info.get("username")
-#         post["author_avatar_url"] = author_info.get("avatar_url")
-#         post['post_time'] = get_datetime_by_objectId(post["id"])
-#     print(posts)
-#
-#     # 为labels补全数据
-#     labels = set()
-#     for book in books:
-#         labels.update(book.get("label", []))  # 如果label可能为None，可以用[]作为默认值
-#     for post in posts:
-#         labels.update(post.get("labels", []))  # 如果labels可能为None，可以用[]作为默认值
-#     print(labels)
-#     return render(request, "forum/search_result.html",
-#                   {"users": users, "books": books, "posts": posts, "labels": labels, "query": query,
-#                    'show_part': show_part})
-
-
 class SearchResultView(views.View):
     paginator_user = PaginatorFromFunction(userinfo_service.find_userinfos_by_username, per_page=12)
     paginator_book = PaginatorFromFunction(book_service.find_book_by_isbn_or_title, per_page=8)
@@ -183,9 +143,15 @@ class SearchResultView(views.View):
 
         labels = set()
         for book in books:
-            labels.update(book.get("label", '').split(","))
+            if 'label' in book:
+                label = book.get("label").split(",")
+                book["label"] = label
+                labels.update(label)
         for post in posts:
-            labels.update(post.get("labels", '').split(","))
+            if 'labels' in post:
+                label = post.get("labels", '').split(",")
+                post["labels"] = label
+                labels.update(label)
         labels.discard('')
 
         print(users)

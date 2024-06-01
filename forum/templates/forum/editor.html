@@ -1,4 +1,5 @@
  {% extends 'base_forum.html' %}
+{% load static %}
 
 {% block content %}
   <div class="container">
@@ -58,19 +59,19 @@
                 {# 妈的，今天520，坐直男旁边坐了五六个小时，为什么不是坐他身上 #}
               </div>
             </div>
-            {# 选中 #}
+            {# 选中 #} 
             <div id="bound-book" class="row mt-3">
               <div class="col-6">
-                <img style="object-fit: contain;width: 170px" src="">
+                <img style="object-fit: contain;width: 170px" src="{% if bound_book.cover %}{{ bound_book.cover }}{% else %}{% static 'img/default_book_cover.png' %}{% endif %}">
               </div>
               <div class="col-6 fs-6" id="book-other-data">
                 <div>
                   <span>标题：</span>
-                  <span></span>
+                  <span>{{ bound_book.title }}</span>
                 </div>
                 <div>
                   <span>ISBN：</span>
-                  <span></span>
+                  <span>{{ bound_book.isbn }}</span>
                 </div>
                 <a>
                   <span>跳转到书籍详情页</span>

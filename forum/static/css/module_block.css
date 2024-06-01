@@ -9,3 +9,16 @@
 .module-not-found {
 
 }
+
+.book-block .label-all, .post-block .label-all {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s ease-in-out, opacity 0.3s ease;
+    transition-delay: 0.1s, 0s;
+}
+
+.book-block:hover .label-all, .post-block:hover .label-all {
+    max-height: 200px; /* 一个足够大的值，以容纳所有内容 */
+    opacity: 1;
+}

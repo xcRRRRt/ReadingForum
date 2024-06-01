@@ -27,7 +27,7 @@ class BookService:
         res = self.db.book_insert_one(data)
         return res.acknowledged, str(res.inserted_id)
 
-    def find_book_by_id(self, book_id: str, *required_fields, map_fields: bool = False) -> Mapping[str, Any] | None:
+    def find_book_by_id(self, book_id: str, *required_fields, map_fields: bool = False) -> dict[str, Any] | None:
         """
         按照ObjectId查询图书
         :param book_id: ObjectId

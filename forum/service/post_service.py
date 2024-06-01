@@ -8,6 +8,7 @@ from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
 from utils.db_operation import MongodbOperation
 from utils.tokenize import Tokenizer
+from utils.datetime_util import get_datetime_by_objectId
 
 userinfo_service = UserInfoService()
 book_service = BookService()
@@ -170,6 +171,30 @@ class PostService:
         for post in posts:
             post["id"] = str(post["_id"])
             del post["_id"]
+        return posts
+
+    def find_book_posts(self, book: dict[str, Any], skip: int, limit: int, sort_by: dict[str, Any]) -> List[dict[str, Any]]:
+        """
+        找到绑定book的帖子
+        :param book:
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        if len(book.get("posts", [])) == 0:
+            print(1)
+            return []
+        post_ids = book.get("posts")
+        posts = []
+        for post_id in post_ids:
+            post = self.find_post_by_id(post_id, 'title', 'content', 'author', 'labels')
+            author_id = post.get("author")
+            author_info = userinfo_service.find_userinfo_by_id(author_id, 'avatar_url', 'username')
+            post["author"] = author_info.get('username')
+            post['avatar_url'] = author_info.get('avatar_url')
+            post['time'] = get_datetime_by_objectId(post['_id'])
+            posts.append(post)
         return posts
 
 

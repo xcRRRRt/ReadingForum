@@ -3,7 +3,10 @@ $(document).ready(function () {
     CKEDITOR.instances.id_content.on("instanceReady", function () {
         $("#cke_1_contents").css("height", "500px");
     });
-    $("#bound-book").hide();
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.has("bind")) {
+        $("#bound-book").hide();
+    }
     bind_book();
     cancel_bind();
 
@@ -146,6 +149,15 @@ function add_label() {
     }
 }
 
+// function check_bind() {
+//     const urlParams = new URLSearchParams(window.location.search);
+//     if (urlParams.has("bind")) {
+//         const bind_book_id = urlParams.get("bind");
+//
+//     }
+// }
+
+
 function bind_book() {
     let book_bind_fake = $('#book-bind-fake');
     let book_bind_real = $('#book-bind');
@@ -213,8 +225,12 @@ function add_book_to_dropdown(books) {
             class: 'dropdown-img-container'
         });
         // 创建 img 元素
+        let cover = book['cover'];
+        if (cover === undefined || cover === '') {
+            cover = "/static/img/default_book_cover.png";
+        }
         let $img = $('<img>', {
-            src: book['cover']
+            src: cover
         });
         $dropdownImgContainer.append($img);
         // 创建 dropdown-text-container div
@@ -251,8 +267,9 @@ function choose_book(event) {
     const isbn = book['isbn'];
     const id = book['id'];
     let bound_book = $("#bound-book");
-    if (cover === undefined)
-        cover = "";
+    if (cover === undefined || cover === '') {
+        cover = "/static/img/default_book_cover.png";
+    }
     bound_book.find("img").eq(0).attr('src', cover);
     bound_book.find("#book-other-data div").eq(0).find('span').eq(1).text(title);
     bound_book.find("#book-other-data div").eq(1).find('span').eq(1).text(isbn);

@@ -10,7 +10,7 @@
         <ul class="breadcrumb">
           <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
           <li class="breadcrumb-item"><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></li>
-          <li class="breadcrumb-item" aria-current="page">短评</li>
+          <li class="breadcrumb-item" aria-current="page">书评</li>
         </ul>
       </nav>
       {# 书评 #}
@@ -18,7 +18,7 @@
         <div class="comments-title mb-2">
           <span>{{ book.title }}</span>&nbsp;&nbsp;
           <span>书评</span>
-          <button id="write-comment-btn" class="btn rounded-0 btn-outline-primary me-4" data-bs-toggle="modal" data-bs-target="#comment-modal">
+          <button id="write-comment-btn" class="btn rounded-0 btn-outline-primary me-4 float-end" data-bs-toggle="modal" data-bs-target="#comment-modal">
             发表书评
           </button>
           <div class="modal fade" id="comment-modal" tabindex="-1">
@@ -38,15 +38,20 @@
             </div>
           </div>
         </div>
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div id="comments-sort">
-            <a class="pb-2 px-4"
-               {% if paginator.sort_by.time != -1 %}href="{% url 'comments' book.id %}?time=-1" {% endif %}>倒序</a>
-            <a class="pb-2 px-4"
-               {% if paginator.sort_by.time != 1 %}href="{% url 'comments' book.id %}?time=1" {% endif %}>正序</a>
-            <span class="ms-3">第<b>{{ paginator.page }}</b>页</span>
-          </div>
+        <div class="align-items-center pb-2 border-bottom">
+          {% if paginator.sort_by.time == -1 %}
+            <a class="px-4 sort-btn sort-btn-down sort-btn-active" href="#">倒序</a>
+          {% else %}
+            <a class="px-4 sort-btn sort-btn-down" href="{% url 'book-comments' book.id %}?time=-1">倒序</a>
+          {% endif %}
 
+          {% if paginator.sort_by.time == 1 %}
+            <a class="px-4 sort-btn sort-btn-up sort-btn-active" href="#">正序</a>
+          {% else %}
+            <a class="px-4 sort-btn sort-btn-up" href="{% url 'book-comments' book.id %}?time=1">正序</a>
+          {% endif %}
+
+          <span class="px-4 ms-3">第<b>{{ paginator.page }}</b>页</span>
         </div>
         {% if comments %}
           {% for comment in comments %}
@@ -77,17 +82,17 @@
         {# 分页器 #}
         <div id="mini-paginator" class="mt-4 hstack gap-3 d-flex justify-content-center align-items-center">
           <a {% if paginator.has_prev == True %}
-            href="{% url 'comments' book.id %}?page=1"
+            href="{% url 'book-comments' book.id %}?page=1"
           {% else %}
 
           {% endif %} >&lt;&lt;第一页</a>
           <a {% if paginator.has_prev == True %}
-            href="{% url 'comments' book.id %}?page={{ paginator.previous }}"
+            href="{% url 'book-comments' book.id %}?page={{ paginator.previous }}"
           {% else %}
 
           {% endif %} >&lt;上一页</a>
           <a {% if paginator.has_next == True %}
-            href="{% url 'comments' book.id %}?page={{ paginator.next }}"
+            href="{% url 'book-comments' book.id %}?page={{ paginator.next }}"
           {% else %}
 
           {% endif %} >下一页&gt;</a>
@@ -95,35 +100,7 @@
         </div>
       </div>
       {# 侧边栏 #}
-      <div class="col-3 comments-side-bar">
-        <div class="p-2">
-          <img class="mb-2" src="{{ book.cover }}" alt="暂无封面" style="width: 200px">
-          {# 作品信息 #}
-          <div id="book-other-data">
-            <div id="comments-mini-title">
-              <a href="{% url 'book_detail' book.id %}">{{ book.title }}</a>
-            </div>
-            <div>
-              <span>ISBN: </span>
-              <span>{{ book.isbn }}</span>
-            </div>
-            {% for k, v in book.book_data.items %}
-              <div>
-                <span>{{ k }}: </span>
-                <span>{{ v }}</span>
-              </div>
-            {% endfor %}
-          </div>
-          {# 标签 #}
-          <div class="d-flex flex-wrap mt-2" style="position: relative">
-            {% for label in book.label %}
-              <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
-                <span>{{ label }}</span>
-              </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
+      {% include 'book/side_bar_book.html' %}
     </div>
   </div>
   <body>

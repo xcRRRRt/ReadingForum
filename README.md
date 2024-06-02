@@ -14,3 +14,5 @@
          name="ckeditor_browse",
       )]
    ```
+
+2. 本项目需要使用MongoDB和Redis，请在启动项目前**启动MongoDB和Redis**

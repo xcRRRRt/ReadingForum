@@ -1,5 +1,5 @@
 asgiref==3.7.2
-Django==5.0.2
+Django~=5.0
 django-ckeditor==6.7.1
 django-js-asset==2.2.0
 dnspython==2.6.1
@@ -14,3 +14,4 @@ tzdata @ file:///croot/python-tzdata_1690578112552/work
 wheel==0.41.2
 jieba~=0.42.1
 beautifulsoup4~=4.12.3
+redis~=5.0.4

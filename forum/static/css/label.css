@@ -10,9 +10,32 @@
     /*transition-timing-function: ease;*/
 }
 
+@keyframes rotate {
+    0% {
+        transform: rotate(0);
+    }
+
+    20% {
+        transform: rotate(-2deg);
+    }
+
+    60% {
+        transform: rotate(0);
+    }
+
+    80% {
+        transform: rotate(2deg);
+    }
+
+    100% {
+        transform: rotate(0);
+    }
+}
+
 .label-wrapper:hover {
     color: #eeeeee;
     background-color: #177ed2;
     border-color: #177ed2;
     transform: scale(1.1, 1.1);
+    animation: rotate 0.3s ease infinite;
 }

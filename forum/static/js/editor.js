@@ -94,6 +94,8 @@ function submit_form() {
                     replace_content(content_with_hint);
                     let content_errors = errors['content'];
                     show_errors(content_errors);
+                    let title_errors = errors['title'];
+                    show_errors(title_errors);
                 }
             },
         });

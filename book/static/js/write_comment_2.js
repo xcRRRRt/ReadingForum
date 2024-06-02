@@ -57,7 +57,7 @@ function send_comment(book_id, comment, comment_input) {
                 location.reload();
                 $("#book-comments-wrapper").scrollIntoView();
             } else {
-                show("text-ng-warning", "提示", "", "发送评论失败");
+                show_toast("text-bg-warning", "提示", "", res['error']);
             }
         }
     })

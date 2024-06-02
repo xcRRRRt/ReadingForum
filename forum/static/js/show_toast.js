@@ -1,10 +1,23 @@
+// function show_toast(head_bg_class, strong_text, small_text, body_text) {
+//     const toastLive = $("#liveToast");
+//     toastLive.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
+//     toastLive.find("strong").html(strong_text);
+//     toastLive.find("small").html(small_text);
+//     toastLive.find(".toast-body").html(body_text);
+//     const toast = new bootstrap.Toast(toastLive);
+//     toast.show();
+// }
+
 function show_toast(head_bg_class, strong_text, small_text, body_text) {
-    const toastLive = $("#liveToast");
-    toastLive.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
-    toastLive.find("strong").html(strong_text);
-    toastLive.find("small").html(small_text);
-    toastLive.find(".toast-body").html(body_text);
-    const toast = new bootstrap.Toast(toastLive);
+    let _toast = $('<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">')
+        .append($('<div class="toast-header">')
+            .append($('<strong class="me-auto">').text(strong_text))
+            .append($('<small>').text(small_text))
+            .append($('<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close">')))
+        .append($('<div class="toast-body">').text(body_text));
+    _toast.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
+    $("#toast-container").append(_toast);
+    const toast = new bootstrap.Toast(_toast);
     toast.show();
 }
 

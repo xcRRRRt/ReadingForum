@@ -19,6 +19,13 @@ class PostForm(forms.Form):
     labels = forms.CharField(required=False, widget=forms.HiddenInput())
     bound_book = forms.CharField(required=False, widget=forms.HiddenInput())
 
+    def clean_title(self):
+        title = self.cleaned_data.get("title")
+        _, has_sensitive = Sensitive.detect_sensitive_words(title)
+        if has_sensitive:
+            self.add_error("title", "标题中含有敏感词，请修改后重新提交")
+        return title
+
     def clean_labels(self):
         labels = self.cleaned_data.get('labels')
         if labels == '':
@@ -31,16 +38,6 @@ class PostForm(forms.Form):
         if bound_book == '' or not bound_book:
             return None
         return bound_book
-
-    # def clean_content(self):
-    #     content = self.cleaned_data.get('content')
-    #     content_with_hint, has_sensitive = Sensitive.detect_sensitive_words(content)
-    #     print("aa", content_with_hint)
-    #     if has_sensitive:
-    #         self.add_error('content', "内容中含有敏感词，请修改后重新提交。")
-    #         self.cleaned_data['content'] = content_with_hint
-    #         print(self.cleaned_data)
-    #     return content
 
     def clean(self):
         cleaned_data = super(PostForm, self).clean()

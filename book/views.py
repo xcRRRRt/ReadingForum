@@ -7,6 +7,7 @@ from django.views.generic import TemplateView
 from book.service.book_service import BookService
 from forum.service.post_service import PostService
 from user.service.userinfo_service import UserInfoService
+from utils.detect_sensitive import Sensitive
 from utils.paginator import Paginator, PaginatorFromFunction
 from utils.datetime_util import get_datetime_by_objectId
 
@@ -78,13 +79,14 @@ class BookDetailView(views.View):
 
 def book_comment(request, book_id):
     """
-    书本详情页评论
+    书本详情页发表短评
     """
     comment = request.POST.get('comment')
     user_id = request.session.get('user_id')
-    if book_service.push_comment(book_id, user_id, comment).acknowledged:
+    _, has_sensitive = Sensitive.detect_sensitive_words(comment)
+    if not has_sensitive and book_service.push_comment(book_id, user_id, comment).acknowledged:
         return JsonResponse({"success": True})
-    return JsonResponse({"success": False})
+    return JsonResponse({"success": False, 'error': '评论中有敏感词，请修改后重新发布'})
 
 
 class CommentsListView(views.View):

@@ -85,7 +85,7 @@
                             <span>{{ book.isbn }}</span>
                           </div>
                         </div>
-                      
+
                         <div class="d-flex flex-wrap px-2 mt-2 label-all" style="position: relative">
                           {% if book.label %}
                             {% for label in book.label %}
@@ -93,9 +93,9 @@
                                 <span>{{ label }}</span>
                               </div>
                             {% endfor %}
-                          {% endif %} 
+                          {% endif %}
                         </div>
-                      
+
                       </div>
                     </div>
                   {% endfor %}
@@ -143,9 +143,10 @@
                     </div>
 
                     <div class="ms-3 post-content-truncated d-flex flex-column">
-                      {{ post.content|safe|truncatechars:200 }}
+                      {{ post.brief_content|truncatechars:200 }}
+                      <img class="mb-2" src="{{ post.first_img_src }}">
                     </div>
-                  
+
                     <div class="d-flex flex-wrap px-2 label-all" style="position: relative">
                       {% if post.labels %}
                         {% for label in post.labels %}
@@ -153,7 +154,7 @@
                             <span>{{ label }}</span>
                           </div>
                         {% endfor %}
-                      {% endif %} 
+                      {% endif %}
                     </div>
 
                   </div>

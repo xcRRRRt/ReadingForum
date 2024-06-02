@@ -2,6 +2,7 @@ from django import views
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
+from bs4 import BeautifulSoup
 
 from book.service.book_service import BookService
 from forum.forms import PostForm
@@ -152,12 +153,22 @@ class SearchResultView(views.View):
                 label = post.get("labels", '').split(",")
                 post["labels"] = label
                 labels.update(label)
+            # 找出content中的第一张图片
+            content = post.get("content")
+            soup = BeautifulSoup(content, "html.parser")
+            post['brief_content'] = soup.get_text()
+            first_img = soup.find("img")
+            if first_img:
+                src = first_img.get("src")
+                if src:
+                    post["first_img_src"] = src
+
         labels.discard('')
 
-        print(users)
-        print(books)
-        print(posts)
-        print(labels)
+        print(len(users))
+        print(len(books))
+        print(len(posts))
+        print(len(labels))
 
         return render(request, "forum/search_result.html",
                       {"users": users, "books": books, "posts": posts, "labels": labels, "query": query,

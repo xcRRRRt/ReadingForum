@@ -17,6 +17,8 @@
         <div class="card" style="width: 18rem;">
           {% if book.cover %}
             <img src="{{ book.cover }}" class="card-img-top" alt="暂无封面">
+          {% else %}
+            <img src="{% static 'img/default_book_cover.png' %}">
           {% endif %}
           <div class="card-body">
             <h1 id="book-title" class="card-title">{{ book.title }}</h1>

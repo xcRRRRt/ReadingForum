@@ -1,12 +1,17 @@
 from datetime import datetime
 from typing import *
+import pprint
+from typing import Tuple
+from copy import deepcopy
 
 from bson import ObjectId
 from pymongo.results import InsertOneResult, UpdateResult
+from pymongo.command_cursor import CommandCursor
 
 from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
 from utils.db_operation import MongodbOperation
+from utils.paginator import PaginatorFromFunction
 from utils.tokenize import Tokenizer
 from utils.datetime_util import get_datetime_by_objectId
 
@@ -166,7 +171,8 @@ class PostService:
             sort_by = {}
         sort_by.update({"score": {"$meta": "textScore"}})
         filter_ = {"$text": {"$search": query}}
-        cursor = self.db.post_find(filter_, {"score": {"$meta": "textScore"}, "title_tokenized": 0, "content_tokenized": 0}).sort(sort_by)
+        cursor = self.db.post_find(filter_, {"score": {"$meta": "textScore"}, "title_tokenized": 0,
+                                             "content_tokenized": 0}).sort(sort_by)
         posts = list(cursor.skip(skip).limit(limit))
         for post in posts:
             post["id"] = str(post["_id"])
@@ -183,7 +189,6 @@ class PostService:
         :return:
         """
         if len(book.get("posts", [])) == 0:
-            print(1)
             return []
         post_ids = book.get("posts")
         posts = []
@@ -197,9 +202,229 @@ class PostService:
             posts.append(post)
         return posts
 
+    def reply_to_post(self, post_id: str | ObjectId, user_id: str | ObjectId, content: str) -> tuple[UpdateResult, ObjectId]:
+        """
+        帖子回复
+        :param post_id: 帖子ID
+        :param user_id: 用户ID
+        :param content: 回复内容
+        :return:
+        """
+        doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content}
+        res: UpdateResult = self.db.post_update_one({"_id": ObjectId(post_id)}, {"$push": {"reply": doc}})
+        return res, doc['id']
+
+    def reply_to_reply(self, post_id: str | ObjectId, user_id: str | ObjectId, content: str,
+                       root_reply: str | ObjectId, reply_to: None | str | ObjectId = None) -> tuple[UpdateResult, ObjectId]:
+        """
+        回复的回复
+        :param post_id: 帖子ID
+        :param user_id: 用户ID
+        :param content: 回复内容
+        :param root_reply: 顶级回复ID
+        :param reply_to: 回复本回复的顶级回复下的某条回复
+        :return:
+        """
+        doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content}
+        if reply_to:
+            doc["reply_to"] = reply_to
+        res: UpdateResult = self.db.post_update_one(
+            {"_id": ObjectId(post_id), "reply.id": ObjectId(root_reply)},
+            {"$push": {"reply.$.reply": doc}}
+        )
+        return res, doc['id']
+
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+    # 准备发疯
+
+    def find_replies(self, post_id: str | ObjectId, skip: int, limit: int, sort_by: dict[str, Any] | None = None) -> List[Dict[str, Any]]:
+        """
+        找顶级回复
+        :param post_id: 帖子id
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        pipeline = [
+            {"$match": {"_id": ObjectId(post_id)}},
+            {"$project": {"reply": 1, "_id": 0}},
+            {"$unwind": "$reply"},
+            {"$sort": {"reply.id": -1}},
+            {"$skip": skip},
+            {"$limit": limit},
+            {"$project": {"reply.id": 1, "reply.user_id": 1, "reply.content": 1}},
+            {"$replaceRoot": {"newRoot": "$reply"}},
+            {"$lookup": {"from": "userinfo", "localField": "user_id", "foreignField": "_id", "as": "user_info"}},
+            {"$project": {"id": 1, "user_id": 1, "content": 1, "user_info.username": 1, "user_info.avatar_url": 1}},
+            {
+                "$replaceRoot": {
+                    "newRoot": {
+                        "$mergeObjects": [
+                            {"$arrayElemAt": ["$user_info", 0]}, "$$ROOT"
+                        ]
+                    }
+                }
+            },
+            {"$project": {"user_info": 0}},
+            {"$addFields": {"reply_time": {"$toDate": "$id"}}}
+        ]
+        cursor = self.db.post_aggregate(pipeline)
+        replies = list(cursor)
+        return replies
+
+    def find_replies_of_reply(self, post_id: str | ObjectId, root_reply: ObjectId | str, skip: int, limit: int,
+                              sort_by: None | Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """
+        找顶级回复下的回复
+        :param post_id: 帖子ID
+        :param root_reply: 顶级回复ID
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        pipeline = [
+            {"$match": {"_id": ObjectId(post_id)}},
+            {"$project": {"reply": 1, "_id": 0}},
+            {"$unwind": "$reply"},
+            {"$match": {"reply.id": ObjectId(root_reply)}},
+            {"$replaceRoot": {"newRoot": "$reply"}},
+            {"$project": {"reply": 1}},
+            {"$unwind": "$reply"},
+            {"$sort": {"reply.id": 1}},
+            {"$skip": skip},
+            {"$limit": limit},
+            {"$replaceRoot": {"newRoot": "$reply"}},
+            {"$lookup": {"from": "userinfo", "localField": "user_id", "foreignField": "_id", "as": "user_info"}},
+            {"$project": {"id": 1, "user_id": 1, "content": 1, "reply_to": 1, "user_info.username": 1, "user_info.avatar_url": 1}},
+            {
+                "$replaceRoot": {
+                    "newRoot": {
+                        "$mergeObjects": [
+                            {"$arrayElemAt": ["$user_info", 0]}, "$$ROOT"
+                        ]
+                    }
+                }
+            },
+            {"$project": {"user_info": 0}},
+            {"$addFields": {"reply_time": {"$toDate": "$id"}}}
+        ]
+        cursor = self.db.post_aggregate(pipeline)
+        replies = list(cursor)
+        for reply in replies:
+            if "reply_to" in reply:
+                reply["reply_to"] = self.find_one_reply(post_id, root_reply, reply['reply_to'])
+        return replies
+
+    def find_one_reply(self, post_id: str | ObjectId, root_reply_id: str | ObjectId, secondary_reply_id: str | ObjectId | None = None):
+        """
+        找回复
+        :param post_id: 帖子ID
+        :param root_reply_id: 顶级回复ID
+        :param secondary_reply_id: 次级回复ID, 如果为空则在顶级评论找，否在在次级评论找
+        :return:
+        """
+        pipeline = [
+            {"$match": {"_id": ObjectId(post_id)}},
+            {"$project": {"reply": 1, "_id": 0}},
+            {"$unwind": "$reply"},
+            {"$match": {"reply.id": ObjectId(root_reply_id)}},
+            {"$replaceRoot": {"newRoot": "$reply"}},
+        ]
+        if not secondary_reply_id:
+            pipeline += [
+                {"$project": {"id": 1, "content": 1, "user_id": 1}}
+            ]
+        else:
+            pipeline += [
+                {"$project": {"reply": 1}},
+                {"$unwind": "$reply"},
+                {"$match": {"reply.id": ObjectId(secondary_reply_id)}},
+                {"$replaceRoot": {"newRoot": "$reply"}}
+            ]
+        pipeline += [
+            {"$lookup": {"from": "userinfo", "localField": "user_id", "foreignField": "_id", "as": "user_info"}},
+            {"$project": {"id": 1, "user_id": 1, "content": 1, "reply_to": 1, "user_info.username": 1, "user_info.avatar_url": 1}},
+            {
+                "$replaceRoot": {
+                    "newRoot": {
+                        "$mergeObjects": [
+                            {"$arrayElemAt": ["$user_info", 0]}, "$$ROOT"
+                        ]
+                    }
+                }
+            },
+            {"$project": {"user_info": 0}},
+            {"$addFields": {"reply_time": {"$toDate": "$id"}}}
+        ]
+        cursor: CommandCursor = self.db.post_aggregate(pipeline)
+        reply = cursor.next()
+        cursor.close()
+        for k, v in reply.items():
+            reply[k] = str(v)
+        return reply
+
+    def find_chain_reply(self, post_id: str | ObjectId, root_reply_id: str | ObjectId, secondary_reply_id: str | ObjectId | None = None,
+                         depth: int | Literal["inf"] = 2, direction: Literal['both', 'back', 'forward'] = 'backward'):
+        reply_root = self.find_one_reply(post_id, root_reply_id, secondary_reply_id)
+        reply = reply_root
+        for _ in range(depth - 1):
+            if "reply_to" in reply:
+                secondary_reply_id = reply["reply_to"]
+                reply_ = self.find_one_reply(post_id, root_reply_id, secondary_reply_id)
+                reply["reply_to"] = reply_
+                reply = reply_
+            else:
+                break
+        return reply_root
+
 
 if __name__ == '__main__':
     post_service = PostService()
     # print(post_service.have_user_liked_post("65f7e2bd9b0a0c39127c1cea", "testuser1"))
     # print(post_service.find_post_by_labels(['测试'], 0, 10, {}))
-    print(post_service.text_search_posts("丰乳肥臀", limit=5))
+    # print(post_service.text_search_posts("丰乳肥臀", limit=5))
+    # post_service.reply_to_post("665c3221447867a69e1d51dd", "65f7e03cf2d605e647ba0168", "测试回复2")
+    post_service.reply_to_reply("665c3221447867a69e1d51dd", "65f7e03cf2d605e647ba0168", "测试回复",
+                                "6660a2fcd54779a40c26c0cd", "6660a300d54779a40c26d4ea")
+    # post_service.find_replies("665c3221447867a69e1d51dd", 0, 10)
+    # print(post_service.find_replies_of_reply("665c3221447867a69e1d51dd", "665ec1a1e39c0862b3056a4f", 0, 10))
+    # print(post_service.find_one_reply("665c3221447867a69e1d51dd", "665ec1a1e39c0862b3056a4f"))
+
+    # import random
+    #
+    # users = ['65f05515abc9fcbee905ecce', "65f450d87572e71eed946c80", "65f7d61550f37bf5756e2b06", "65f7e03cf2d605e647ba0168", "65f90c7a81ade435b8c616cd"]
+    #
+    # for i in range(100, 0, -1):
+    #     post_id = "665c3221447867a69e1d51dd"
+    #     post_service.reply_to_post(post_id, random.choice(users), "帖子回复" + str(i))
+    #
+    # post_id = "665c3221447867a69e1d51dd"
+    # replies = post_service.find_replies(post_id, skip=0, limit=100)
+    # num_replies = 100
+    # for reply in replies:
+    #     root_reply_id = reply["id"]
+    #     for i in range(num_replies, 0, -1):
+    #         post_service.reply_to_reply(post_id, random.choice(users), "回复的回复" + str(i), root_reply_id)
+    #     num_replies -= 1
+
+    reply = post_service.find_chain_reply("665c3221447867a69e1d51dd", "6660a2fcd54779a40c26c0ce", "6660a5889d0d804a04f1ac69")
+    pprint.PrettyPrinter().pprint(reply)

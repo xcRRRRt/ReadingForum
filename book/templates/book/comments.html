@@ -64,11 +64,7 @@
                            {% if comment.avatar_url %}{{ comment.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                        alt="头像">
                   <div class="ms-2">
-                    <a href="{% if comment.username == request.session.username %}
-                      	{% url 'userinfo' %}
-                      	{% else %}
-                      	{% url 'userinfo_other' comment.username %}
-                        {% endif %}">{{ comment.username }}
+                    <a href="{% url 'userinfo' comment.username %}">{{ comment.username }}
                     </a>
                     <div class="text-secondary" style="font-size: 11px">{{ comment.time }}</div>
                   </div>
@@ -100,7 +96,9 @@
         </div>
       </div>
       {# 侧边栏 #}
-      {% include 'book/side_bar_book.html' %}
+      <div class="col-3 comments-side-bar">
+        {% include 'book/side_bar_book.html' %}
+      </div>
     </div>
   </div>
   <body>

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block breadcrumb %}
-  <li class="breadcrumb-item"><a href="{% url 'userinfo_other' userinfo.username %}">{{ userinfo.username }}</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'userinfo' userinfo.username %}">{{ userinfo.username }}</a></li>
   <li class="breadcrumb-item" aria-current="page">个人信息</li>
 {% endblock %}
 

@@ -115,11 +115,7 @@
                              {% if comment.avatar_url %}{{ comment.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                          alt="头像">
                     <div class="ms-2">
-                      <a href="{% if comment.username == request.session.username %}
-                      	{% url 'userinfo' %}
-                      	{% else %}
-                      	{% url 'userinfo_other' comment.username %}
-                        {% endif %}">{{ comment.username }}
+                      <a href="{% url 'userinfo' comment.username %}">{{ comment.username }}
                       </a>
                       <div class="text-secondary" style="font-size: 11px">{{ comment.time }}</div>
                     </div>
@@ -170,11 +166,7 @@
                          src="{% if post.author_avatar %}{{ post.author_avatar }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                          alt="头像">
                     <div class="ms-3">
-                      <a href="{% if post.author == request.session.username %}
-                          {% url 'userinfo' %}
-                          {% else %}
-                          {% url 'userinfo_other' post.author %}
-                          {% endif %}">{{ post.author }}</a>
+                      <a href="{% url 'userinfo' post.author %}">{{ post.author }}</a>
                       <div class="text-secondary">{{ post.post_time }}</div>
                     </div>
                   </div>

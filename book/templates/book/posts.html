@@ -41,11 +41,7 @@
                        src="{% if post.avatar_url %}{{ post.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                        alt="头像">
                   <div class="ms-2">
-                    <a href="{% if post.author == request.session.username %}
-                      	{% url 'userinfo' %}
-                      	{% else %}
-                      	{% url 'userinfo_other' post.author %}
-                        {% endif %}">{{ post.author }}
+                    <a href="{% url 'userinfo' post.author %}">{{ post.author }}
                     </a>
                     <div class="text-secondary" style="font-size: 11px">{{ post.time }}</div>
                   </div>
@@ -72,7 +68,9 @@
       </div>
 
 
-      {% include 'book/side_bar_book.html' %}
+      <div class="col-3 comments-side-bar">
+        {% include 'book/side_bar_book.html' %}
+      </div>
 
     </div>
   </div>

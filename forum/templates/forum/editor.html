@@ -73,7 +73,7 @@
                   <span>ISBN：</span>
                   <span>{{ bound_book.isbn }}</span>
                 </div>
-                <a href="{% url 'book_detail' bound_book.id %}">
+                <a href="{% if bound_book.id %}{% url 'book_detail' bound_book.id %}{% endif %}">
                   <span>跳转到书籍详情页</span>
                   <img src="/media/icon/box-arrow-up-right.svg">
                 </a>

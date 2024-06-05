@@ -117,22 +117,35 @@ def reset_password(request):
     return render(request, "user/reset_password.html", {"form": form})
 
 
+# @AuthRequired.login_required()
+# def userinfo(request):
+#     """用户个人中心"""
+#     email = userinfo_service.get_email(request.session.get('username'))
+#     register_time = userinfo_service.get_register_time(request.session.get('username'))
+#     data = {"email": email, "register_time": register_time}
+#     return render(request, 'user/userinfo.html', data)
+#
+#
+# def userinfo_other(request, username):
+#     """
+#     其他用户主页
+#     """
+#     user = userinfo_service.find_userinfo_by_username(username, "username", "avatar_url", "introduction")
+#     register_time = userinfo_service.get_register_time(username)
+#     return render(request, 'user/userinfo_other_user.html', {"userinfo": user, "register_time": register_time})
+
 @AuthRequired.login_required()
-def userinfo(request):
-    """用户个人中心"""
-    email = userinfo_service.get_email(request.session.get('username'))
-    register_time = userinfo_service.get_register_time(request.session.get('username'))
-    data = {"email": email, "register_time": register_time}
-    return render(request, 'user/userinfo.html', data)
-
-
-def userinfo_other(request, username):
-    """
-    其他用户主页
-    """
-    user = userinfo_service.find_userinfo_by_username(username, "username", "avatar_url", "introduction")
-    register_time = userinfo_service.get_register_time(username)
-    return render(request, 'user/userinfo_other_user.html', {"userinfo": user, "register_time": register_time})
+def userinfo(request, username):
+    print(username, 1)
+    if username == request.session.get("username"):
+        email = userinfo_service.get_email(request.session.get('username'))
+        register_time = userinfo_service.get_register_time(request.session.get('username'))
+        data = {"email": email, "register_time": register_time}
+        return render(request, 'user/userinfo.html', data)
+    else:
+        user = userinfo_service.find_userinfo_by_username(username, "username", "avatar_url", "introduction")
+        register_time = userinfo_service.get_register_time(username)
+        return render(request, 'user/userinfo_other_user.html', {"userinfo": user, "register_time": register_time})
 
 
 @AuthRequired.login_required()

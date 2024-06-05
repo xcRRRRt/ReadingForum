@@ -5,11 +5,12 @@ from django.views.generic import TemplateView
 from bs4 import BeautifulSoup
 
 from book.service.book_service import BookService
-from forum.forms import PostForm
+from forum.forms import PostEditorForm
 from forum.service.post_service import *
 from user.service.userinfo_service import UserInfoService
 from user.service.verification_service import VerificationService
 from utils.datetime_util import get_datetime_by_objectId
+from utils.detect_sensitive import Sensitive
 from utils.paginator import PaginatorFromFunction
 
 # Create your views here.
@@ -25,7 +26,7 @@ def homepage(request):
 
 class EditorView(views.View):
     def get(self, request):
-        form = PostForm()
+        form = PostEditorForm()
         bound_book = None
         if request.GET.get('bind'):
             bound_book_id = request.GET.get('bind')
@@ -35,7 +36,7 @@ class EditorView(views.View):
         return render(request, "forum/editor.html", {"form": form, "bound_book": bound_book})
 
     def post(self, request):
-        form = PostForm(request.POST)
+        form = PostEditorForm(request.POST)
         if form.is_valid():
             post_service.launch_post(content=form.cleaned_data.get("content"),
                                      title=form.cleaned_data.get("title"),
@@ -50,19 +51,24 @@ class EditorView(views.View):
 class PostDetailView(views.View):
     def get(self, request, post_id):
         # 获取需要的数据
-        post = post_service.find_post_by_id(post_id, 'author', 'content', 'labels', 'title', '_id')
+        post = post_service.find_post_by_id(post_id, 'author', 'content', 'labels', 'title', 'bound_book')
+        post['time'] = get_datetime_by_objectId(post.get('_id'))
         author = post.get("author")
         userinfo = userinfo_service.find_userinfo_by_id(author, 'avatar_url', 'username')
+        book_id = post.get("bound_book")
+        book = None
+        if book_id:
+            book = book_service.find_book_by_id(book_id, 'title', 'isbn', 'cover', 'book_data', 'label')
         print(userinfo.get('username'))
         context = {
             "post": post,
             "post_author_avatar_url": userinfo.get('avatar_url'),
             "author": userinfo.get('username'),
-            "time": get_datetime_by_objectId(post.get("_id"))
+            "book": book
         }
-        post_likes_count = post_service.get_post_likes(post_id)  # 获取点赞数量
-        user_post_like = post_service.have_user_liked_post(post_id, request.session.get("username"))  # 获取用户是否点赞过该帖子
-        context = {**context, **post_likes_count, **user_post_like}
+        # post_likes_count = post_service.get_post_likes(post_id)  # 获取点赞数量
+        # user_post_like = post_service.have_user_liked_post(post_id, request.session.get("username"))  # 获取用户是否点赞过该帖子
+        # context = {**context, **post_likes_count, **user_post_like}
         print(context)
         return render(request, "forum/detail_post.html", context=context)
 
@@ -82,6 +88,61 @@ class PostDetailView(views.View):
             else:
                 pass
         return HttpResponse()
+
+
+class ReplyView(views.View):
+    paginator = PaginatorFromFunction(post_service.find_replies, 10)
+
+    def get(self, request, post_id):
+        self.paginator.page = int(request.GET.get("page"))
+        replies = self.paginator.from_function(post_id=post_id)
+        for reply in replies:
+            paginator_ = PaginatorFromFunction(post_service.find_replies_of_reply, 2)
+            replies_ = paginator_.from_function(post_id=post_id, root_reply=reply.get("id"))
+            if replies_:
+                reply['reply'] = replies_
+                reply['has_more'] = paginator_.has_next
+        return JsonResponse(replies, safe=False)
+
+    def post(self, request, post_id):
+        content = request.POST.get("content")
+        root_reply_id = request.POST.get("root_reply_id")
+        reply_to = request.POST.get("reply_to")
+        if root_reply_id == "":
+            root_reply_id = None
+        if reply_to == "":
+            reply_to = None
+        _, has_sensitive = Sensitive.detect_sensitive_words(content)
+        if has_sensitive:
+            return JsonResponse({"success": False, "error": "回复中有敏感词，请修改后再回复~栓Q歪瑞马驰"})
+        if root_reply_id is None and reply_to is None:
+            _, reply_id = post_service.reply_to_post(post_id, request.session.get("user_id"), content)
+            reply = post_service.find_one_reply(post_id, reply_id)
+            return JsonResponse({"success": True, "reply": reply})
+        else:
+            if root_reply_id == reply_to:
+                reply_to = None
+            _, reply_id = post_service.reply_to_reply(post_id, request.session.get("user_id"), content, root_reply_id, reply_to)
+            reply = post_service.find_chain_reply(post_id, root_reply_id, reply_id)
+            return JsonResponse({"success": True, "reply": reply})
+
+
+class ReplyReplyView(views.View):
+    paginator = PaginatorFromFunction(post_service.find_replies_of_reply, 10)
+
+    def get(self, request, post_id, root_reply_id):
+        self.paginator.page = int(request.GET.get("page"))
+        replies = self.paginator.from_function(post_id=post_id, root_reply=root_reply_id)
+        context = {
+            'replies': replies,
+            "has_previous": self.paginator.has_prev,
+            "has_next": self.paginator.has_next,
+            "page_now": self.paginator.page
+        }
+        return JsonResponse(context, safe=False)
+
+    def post(self, request, post_id, root_reply_id):
+        pass
 
 
 def search_book(request):

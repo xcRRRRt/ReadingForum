@@ -301,10 +301,15 @@ class PaginatorFromFunction:
     def next(self) -> int:
         return self._page + 1
 
-    def from_function(self, **kwargs):
-        objs = self.func(**kwargs, skip=self._skip, sort_by=self.sort_by, limit=self._per_page + 1)
-        self._has_next = True if self._per_page + 1 == len(objs) else False
-        return self._clean_data(objs[:self._per_page])
+    def from_function(self, multi_return: bool = False, **kwargs):
+        if multi_return:
+            objs, *other_returns = self.func(**kwargs, skip=self._skip, sort_by=self.sort_by, limit=self._per_page + 1)
+            self._has_next = True if self._per_page + 1 == len(objs) else False
+            self._clean_data(objs[:self._per_page]), other_returns
+        else:
+            objs = self.func(**kwargs, skip=self._skip, sort_by=self.sort_by, limit=self._per_page + 1)
+            self._has_next = True if self._per_page + 1 == len(objs) else False
+            return self._clean_data(objs[:self._per_page])
 
     def _clean_data(self, data):
         """

@@ -20,6 +20,7 @@ if __name__ == "__main__":
         # 为timestamp列创建降序索引，timestamp的时间离现在越近，被访问的概率越大（因为是验证码，离现在越近的时间被访问的概率越大）
         # 并设置过期时间
         res = collection.create_index([('timestamp', -1)], expireAfterSeconds=1800)
+        collection.find()
         print(collection.index_information())
 
     # 用户信息collection

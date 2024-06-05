@@ -3,47 +3,130 @@
 {% block content %}
   {% csrf_token %}
   <div class="container">
-    <div class="mx-5">
-      <div class="row">
-        <div id="post-detail" class="col-8 p-5 pt-0">
-          <h1 id="post-title">{{ post.title }}</h1>
-          {# 作者信息 #}
-          <div id="author-info" class="d-flex my-3">
-            <img id="avatar-mini"
-                 src="{% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
-                 alt="头像">
-            <div class="ms-3">
-              <a href="{% url 'userinfo_other' author %}">
-                {{ author }}
-              </a>
-              <div class="text-secondary">
-                {{ time }}
-              </div>
-            </div>
-          </div>
-
-          {# 文章内容 #}
-          <div id="post-content">
-            {{ post.content|safe }}
-          </div>
-          
-          {# 赞和踩 #}
-          <div id="post-like" class="{% if user_post_like %}border-danger-subtle{% endif %} d-flex justify-content-center pt-5">
-            <div id="post-like-button" class="d-flex me-2 border py-1 px-3 {% if user_post_like %}border-danger-subtle{% endif %}">
-              <div>赞&nbsp;</div>
-              <img src="{% if user_post_like %}{% static 'img/like_red.svg' %}{% else %}{% static 'img/like.svg' %}{% endif %}"
-                   alt="like">&nbsp;
-              <span>{{ true }}</span>
-            </div>
-            <div id="post-unlike-button" class="d-flex ms-2 border py-1 px-3 {% if user_post_unlike %}border-danger-subtle{% endif %}">
-              <div>踩&nbsp;</div>
-              <img src="{% if user_post_unlike %}{% static 'img/unlike_red.svg' %}{% else %}{% static 'img/unlike.svg' %}{% endif %}" alt="unlike">&nbsp;
-              <span>{{ false }}</span>
+    <div class="mx-5 row">       
+      {# 面包屑 #}
+      <nav aria-label="breadcrumb" class="pt-2">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">首页</a></li>
+          <li class="breadcrumb-item"><a href="#">帖子</a></li>
+          <li class="breadcrumb-item" aria-current="page">{{ post.title }}</li>
+        </ul>
+      </nav>
+      {# 左部分 #}
+      <div class="col-9 pe-4">
+        {# 标题 #}
+        <h1 id="post-title">{{ post.title }}</h1>
+        {# 作者信息 #}
+        <div id="author-info" class="d-flex align-items-center my-3">
+          <img id="avatar-medium"
+               src="{% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+               alt="头像">
+          <div class="ms-3">
+            <a href="{% url 'userinfo' author %}">{{ author }}</a>
+            <div class="text-secondary show-time">
+              {{ post.time }}
             </div>
           </div>
         </div>
+        {# 文章内容 #}
+        <div id="post-content">
+          {{ post.content|safe }}
+        </div>
+        
+        <hr>
+        
+        {# 标签 #}
+        <div class="d-flex flex-wrap mt-2 position-relative">
+          {% for label in post.labels %}
+            <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+              <span>{{ label }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      
+        {# 帖子回复 #}
+        <div class="mt-4 reply-all">
+        
+          <div>
+            <span class="text-muted fw-bold" style="font-size: 18px">评论</span>
+          </div>
+          
+          {# 发表回复 #}
+          <div class="ms-4 mt-3 reply-input-wrapper top-reply-input-wrapper">
+            <div class="d-flex align-items-start">
+              <img id="avatar-large" src="{% if request.session.avatar_url %}{{ request.session.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}" alt="当前用户头像">
+              <textarea class="form-control ms-4" placeholder="发表回复" rows="3"></textarea>
+            </div>
+            <div class="reply-submit-wrapper">
+              <button class="btn btn-sm btn-outline-primary float-end mt-3 px-3">发表</button>
+            </div>
+          </div>
+        
+          {# 所有回复 #}
+          <div class="mt-4" id="reply-all"></div>
+        
+        </div>
+          
       </div>
-      <div class="col-4"></div>
+    
+      {# 右部分 #}
+      <div class="col-3 comments-side-bar">
+        {% include 'book/side_bar_book.html' %}
+      </div>
+    
+    
     </div>
+    
+{#    <div class="mx-5">#}
+{#      <div class="row">#}
+{#        #}
+        {# post #}
+{#        <div id="post-detail" class="col-8 p-5 pt-0">#}
+{#          <h1 id="post-title">{{ post.title }}</h1>#}
+          {# 作者信息 #}
+{#          <div id="author-info" class="d-flex my-3">#}
+{#            <img id="avatar-mini"#}
+{#                 src="{% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"#}
+{#                 alt="头像">#}
+{#            <div class="ms-3">#}
+{#              <a href="{% url 'userinfo_other' author %}">#}
+{#                {{ author }}#}
+{#              </a>#}
+{#              <div class="text-secondary">#}
+{#                {{ time }}#}
+{#              </div>#}
+{#            </div>#}
+{#          </div>#}
+{##}
+          {# 文章内容 #}
+{#          <div id="post-content">#}
+{#            {{ post.content|safe }}#}
+{#          </div>#}
+{#          #}
+          {# 赞和踩 #}
+{#          <div id="post-like" class="{% if user_post_like %}border-danger-subtle{% endif %} d-flex justify-content-center pt-5">#}
+{#            <div id="post-like-button" class="d-flex me-2 border py-1 px-3 {% if user_post_like %}border-danger-subtle{% endif %}">#}
+{#              <div>赞&nbsp;</div>#}
+{#              <img src="{% if user_post_like %}{% static 'img/like_red.svg' %}{% else %}{% static 'img/like.svg' %}{% endif %}"#}
+{#                   alt="like">&nbsp;#}
+{#              <span>{{ true }}</span>#}
+{#            </div>#}
+{#            <div id="post-unlike-button" class="d-flex ms-2 border py-1 px-3 {% if user_post_unlike %}border-danger-subtle{% endif %}">#}
+{#              <div>踩&nbsp;</div>#}
+{#              <img src="{% if user_post_unlike %}{% static 'img/unlike_red.svg' %}{% else %}{% static 'img/unlike.svg' %}{% endif %}" alt="unlike">&nbsp;#}
+{#              <span>{{ false }}</span>#}
+{#            </div>#}
+{#          </div>#}
+{#        </div>#}
+{#      #}
+{#        <div class="col-1">哈哈</div>#}
+{##}
+{#        <div class="col-3">呵呵</div>#}
+{##}
+{#      </div>#}
+{#    </div>#}
   </div>
+  <body>
+  <script src="{% static 'js/post_reply.js' %}"></script>
+  </body>
 {% endblock %}

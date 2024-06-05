@@ -8,3 +8,7 @@
     color: rgb(35, 82, 124);
     /*text-decoration: underline rgb(35, 82, 124);*/
 }
+
+#author-info .show-time {
+    font-size: 13px;
+}

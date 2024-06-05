@@ -1,0 +1,41 @@
+.reply-all {
+    font-size: 15px;
+    line-height: 24px;
+    letter-spacing: 0.02em;
+}
+
+
+.reply-input-wrapper .reply-submit-wrapper {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.3s ease;
+}
+
+.reply-input-wrapper:focus-within .reply-submit-wrapper {
+    height: 55px;
+}
+
+.reply-username {
+    font-size: 14px;
+}
+
+.reply-info-wrapper, .more-reply-trigger, .reply-paginator {
+    font-size: 13px;
+}
+
+.more-reply-trigger {
+    color: rgb(0, 0, 0, 0.5);
+}
+
+.reply-paginator span {
+    margin: 0 3px;
+}
+
+.reply-trigger:hover, .more-reply-trigger:hover, .reply-paginator span:hover {
+    color: #0d6efd;
+}
+
+.no-hover:hover {
+    pointer-events: none;
+}
+

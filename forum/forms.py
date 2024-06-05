@@ -4,7 +4,7 @@ from django import forms
 from utils.detect_sensitive import Sensitive
 
 
-class PostForm(forms.Form):
+class PostEditorForm(forms.Form):
     """
     标题
     标签(多个)
@@ -40,7 +40,7 @@ class PostForm(forms.Form):
         return bound_book
 
     def clean(self):
-        cleaned_data = super(PostForm, self).clean()
+        cleaned_data = super(PostEditorForm, self).clean()
         content = self.cleaned_data.get('content')
         if not content or content.strip() == "":
             self.add_error('content', '内容不可为空')

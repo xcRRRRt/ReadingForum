@@ -1,6 +1,27 @@
 #avatar-mini {
-    height: 40px;
-    width: 40px;
+    height: 28px;
+    width: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#avatar-medium {
+    height: 36px;
+    width: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#avatar-large {
+    height: 44px;
+    width: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#avatar-largest {
+    height: 160px;
+    width: 160px;
     border-radius: 50%;
     object-fit: cover;
 }

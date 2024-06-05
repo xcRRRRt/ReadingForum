@@ -36,7 +36,7 @@
                         </div>
                         <div class="ms-1 mt-1">
                           <a class="text-decoration-none text-body"
-                             href="{% url 'userinfo_other' user.username %}">{{ user.username }}</a>
+                             href="{% url 'userinfo' user.username %}">{{ user.username }}</a>
                           <div class="text-muted" style="font-size: 13px">{{ user.introduction|truncatechars:20 }}</div>
                         </div>
                       </div>
@@ -127,11 +127,7 @@
                            src="{% if post.author_avatar_url %}{{ post.author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                            alt="头像">
                       <div class="ms-3">
-                        <a href="{% if post.author_name == request.session.username %}
-                          {% url 'userinfo' %}
-                        {% else %}
-                          {% url 'userinfo_other' post.author_name %}
-                        {% endif %}">{{ post.author_name }}</a>
+                        <a href="{% url 'userinfo' post.author_name %}">{{ post.author_name }}</a>
                         <div class="text-secondary">{{ post.post_time }}</div>
                       </div>
                     </div>

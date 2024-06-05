@@ -1,6 +1,5 @@
 {# context：book.cover: str, book.title: str, book.isbn: str, book.book_data: dict[str, Any], book.label: List[str] #}
-
-<div class="col-3 comments-side-bar">
+{% if book %}
   <div class="p-2">
     <img class="mb-2" src="{{ book.cover }}" alt="暂无封面" style="width: 200px">
     {# 作品信息 #}
@@ -20,7 +19,7 @@
       {% endfor %}
     </div>
     {# 标签 #}
-    <div class="d-flex flex-wrap mt-2" style="position: relative">
+    <div class="d-flex flex-wrap mt-2 position-relative">
       {% for label in book.label %}
         <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
           <span>{{ label }}</span>
@@ -28,4 +27,4 @@
       {% endfor %}
     </div>
   </div>
-</div>
+{% endif %}

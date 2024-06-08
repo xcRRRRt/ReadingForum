@@ -3,12 +3,16 @@ let post_id = href_split[href_split.length - 2];
 var page = 0
 
 $(document).ready(function () {
-
+    // const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    // const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    // const documentHeight = document.documentElement.scrollHeight;
+    // console.log(scrollTop)
+    // console.log(windowHeight)
+    // console.log(documentHeight)
     checkUserLogin().then(function (is_login) {
         if (!is_login) {
-            $(".top-reply-input-wrapper").attr("disabled", "").attr("placeholder", "请登录后再来哦~");
-            $(document).off("click", ".reply-trigger");
-            $(document).on('click', '.reply-trigger', function () {
+            $(".top-reply-input-wrapper textarea").attr("disabled", "").attr("placeholder", "请登录后再来哦~");
+            $(document).on('click', '.reply-trigger', function (event) {
                 let login_url = $("#navbar-login").attr("href");
                 show_toast("text-bg-warning", "错误提示", "", "用户未登录&nbsp;&nbsp;&nbsp;" + "<a href='" + login_url + "'>立即登录</a>");
             });
@@ -24,12 +28,43 @@ $(document).ready(function () {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight || document.documentElement.clientHeight;
         const documentHeight = document.documentElement.scrollHeight;
-        if (scrollTop + windowHeight >= documentHeight) {
+        // console.log(scrollTop)
+        // console.log(windowHeight)
+        // console.log(documentHeight)
+        if (scrollTop + windowHeight >= documentHeight - 1) {
             load_post_reply_page();
         }
+        // let reply_all = $("#reply-all")
+        // let element_offset = reply_all.offset();
+        // let element_height = reply_all.outerHeight();
+        // let window_height = $(window).height();
+        // let scroll_top = $(window).scrollTop();
+        // let element_bottom = element_offset.top + element_height;
+        //
+        // if ((element_bottom >= scroll_top) && (element_bottom <= (scroll_top + window_height))) {
+        //     load_post_reply_page();
+        // }
+
     });
+    load_post_reply_page();
 });
 
+function isElementFullyInViewport(el) {
+    // 获取元素的边界框
+    var rect = el.getBoundingClientRect();
+
+    // 获取视口的高度和宽度
+    var windowHeight = (window.innerHeight || document.documentElement.clientHeight);
+    var windowWidth = (window.innerWidth || document.documentElement.clientWidth);
+
+    // 判断元素是否完全在视口内
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= windowHeight &&
+        rect.right <= windowWidth
+    );
+}
 
 function load_post_reply_page() {
     page += 1;
@@ -41,6 +76,7 @@ function load_post_reply_page() {
         },
         success: function (replies) {
             if (replies) {
+                console.log(replies)
                 for (const reply of replies) {
                     let reply_block = construct_reply(reply['avatar_url'], reply['username'], reply['content'], reply['reply_time'], reply['user_id'], reply['id']);
                     $("#reply-all").append(reply_block);
@@ -129,7 +165,7 @@ function construct_reply(avatar_, username_, content_, reply_time_, user_id, rep
     let reply_info_wrapper = $("<div>").addClass("text-black-50 mt-1 reply-info-wrapper");
     let reply_time = $("<span>")
     let reply_trigger = $("<span>").addClass("ms-2 text-decoration-none reply-trigger").attr("reply-id", reply_id).attr("username", username_).text("回复").on('click', function () {
-        add_reply_input(this);
+        reply_trigger_on_click(this);
     });
     let reply_reply_wrapper = $("<div>").addClass("reply-reply-wrapper");
 
@@ -147,6 +183,20 @@ function construct_reply(avatar_, username_, content_, reply_time_, user_id, rep
     return reply_block;
 }
 
+function reply_trigger_on_click(trigger_) {
+    let trigger = $(trigger_);
+    checkUserLogin().then(function (is_login) {
+        if (!is_login) {
+            trigger.on('click', function () {
+                let login_url = $("#navbar-login").attr("href");
+                show_toast("text-bg-warning", "错误提示", "", "用户未登录&nbsp;&nbsp;&nbsp;" + "<a href='" + login_url + "'>立即登录</a>");
+            });
+        } else {
+            add_reply_input(trigger_);
+        }
+    });
+}
+
 function construct_reply_reply(avatar_, username_, content_, reply_time_, user_id, reply_to, reply_id) {
     if (avatar_ === undefined || avatar_ === null || avatar_ === "") {
         avatar_ = "/static/img/default_avatar.svg";
@@ -161,7 +211,7 @@ function construct_reply_reply(avatar_, username_, content_, reply_time_, user_i
     let reply_info_wrapper = $("<div>").addClass("text-black-50 mt-1 reply-info-wrapper");
     let reply_time = $("<span>");
     let reply_trigger = $("<span>").addClass("ms-2 text-decoration-none reply-trigger").attr("reply-id", reply_id).attr("username", username_).text("回复").on("click", function () {
-        add_reply_input(this);
+        reply_trigger_on_click(this);
     });
 
     reply_reply_block.attr("user-id", user_id);
@@ -271,7 +321,7 @@ function remove_input_reply() {
     console.log("关闭全部");
     $(".reply-trigger").off("click")
     $(".reply-trigger").on("click", function () {
-        add_reply_input(this);
+        reply_trigger_on_click(this);
     })
     $(".reply-input-wrapper:not(.top-reply-input-wrapper)").remove();
 }

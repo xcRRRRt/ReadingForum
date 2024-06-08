@@ -14,7 +14,7 @@ function show_toast(head_bg_class, strong_text, small_text, body_text) {
             .append($('<strong class="me-auto">').text(strong_text))
             .append($('<small>').text(small_text))
             .append($('<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close">')))
-        .append($('<div class="toast-body">').text(body_text));
+        .append($('<div class="toast-body">').html(body_text));
     _toast.find(".toast-header").removeClass().addClass("toast-header " + head_bg_class);
     $("#toast-container").append(_toast);
     const toast = new bootstrap.Toast(_toast);

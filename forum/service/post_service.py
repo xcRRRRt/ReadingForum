@@ -138,7 +138,7 @@ class PostService:
             return {}
         return {"user_post_like": True} if post.get("likes")[0].get("like") else {"user_post_unlike": True}
 
-    def find_post_by_labels(self, labels: list[str], skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
+    def find_post_by_labels(self, labels: list[str], skip: int, limit: int, sort_by: dict[str, int] | None = None) -> List[Mapping[str, Any]]:
         """
 
         :param labels:
@@ -147,11 +147,30 @@ class PostService:
         :param sort_by:
         :return:
         """
-        filter_ = {"labels": {"$all": labels}}
-        cursor = self.db.post_find(filter_)
-        if sort_by:
-            cursor = cursor.sort(sort_by)
-        posts = list(cursor.limit(limit).skip(skip))
+        pipeline = [
+            {"$match": {"labels": {"$in": labels}}},
+            {
+                "$addFields": {
+                    "match_label_count": {
+                        "$size": {
+                            "$setIntersection": ["$labels", labels]
+                        }
+                    }
+                }
+            },
+            {"$sort": {"match_label_count": -1}},
+            {"$skip": skip},
+            {"$limit": limit},
+            {"$project": {
+                'title': 1,
+                'content': 1,
+                'author': 1,
+                'labels': 1,
+                'bound_book': 1,
+                'match_label_count': 1
+            }}
+        ]
+        posts = list(self.db.post_aggregate(pipeline))
         for post in posts:
             post["id"] = str(post["_id"])
             del post["_id"]
@@ -212,6 +231,7 @@ class PostService:
         """
         doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content}
         res: UpdateResult = self.db.post_update_one({"_id": ObjectId(post_id)}, {"$push": {"reply": doc}})
+        userinfo_service.add_reply(user_id, post_id, doc['id'])
         return res, doc['id']
 
     def reply_to_reply(self, post_id: str | ObjectId, user_id: str | ObjectId, content: str,
@@ -232,6 +252,7 @@ class PostService:
             {"_id": ObjectId(post_id), "reply.id": ObjectId(root_reply)},
             {"$push": {"reply.$.reply": doc}}
         )
+        userinfo_service.add_reply(user_id, post_id, root_reply, doc['id'])
         return res, doc['id']
 
     # 准备发疯
@@ -396,6 +417,70 @@ class PostService:
                 break
         return reply_root
 
+    def find_hottest_posts(self, skip: int, limit: int, sort_by=None):
+        pipeline = [
+            {
+                '$project': {
+                    'title': 1,
+                    'content': 1,
+                    'author': 1,
+                    'labels': 1,
+                    'bound_book': 1,
+                    'reply_count': {'$size': {"$ifNull": ["$reply", []]}},
+                    'reply_reply_counts': {
+                        '$map': {
+                            'input': '$reply',
+                            'as': 'r',
+                            'in': {'$size': {'$ifNull': ['$$r.reply', []]}}
+                        }
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "total_reply_count": {
+                        "$add": [{"$sum": "$reply_reply_counts"}, "$reply_count"]
+                    }
+                }
+            },
+            {
+                "$sort": {"total_reply_count": -1}
+            },
+            {"$skip": skip},
+            {"$limit": limit},
+            {
+                "$project": {
+                    "total_reply_count": 1,
+                    'title': 1,
+                    'content': 1,
+                    'author': 1,
+                    'labels': 1,
+                    'bound_book': 1
+                }
+            }
+        ]
+
+        posts = list(self.db.post_aggregate(pipeline))
+        for post in posts:
+            post["id"] = str(post["_id"])
+            post['time'] = get_datetime_by_objectId(post['id'])
+            del post["_id"]
+        # pprint.PrettyPrinter().pprint(posts)
+        return posts
+
+    def find_new_posts(self, skip, limit, sort_by=None):
+        sort_by = {"_id": -1}
+        cursor = self.db.post_find({}, projection={'title': 1, 'content': 1, 'author': 1, 'labels': 1, 'bound_book': 1})
+        if sort_by:
+            cursor = cursor.sort(sort_by)
+        posts = list(cursor.skip(skip).limit(limit))
+        for post in posts:
+            post["id"] = str(post["_id"])
+            post['time'] = get_datetime_by_objectId(post['id'])
+            del post["_id"]
+        # pprint.PrettyPrinter().pprint(posts)
+        return posts
+
 
 if __name__ == '__main__':
     post_service = PostService()
@@ -403,8 +488,8 @@ if __name__ == '__main__':
     # print(post_service.find_post_by_labels(['测试'], 0, 10, {}))
     # print(post_service.text_search_posts("丰乳肥臀", limit=5))
     # post_service.reply_to_post("665c3221447867a69e1d51dd", "65f7e03cf2d605e647ba0168", "测试回复2")
-    post_service.reply_to_reply("665c3221447867a69e1d51dd", "65f7e03cf2d605e647ba0168", "测试回复",
-                                "6660a2fcd54779a40c26c0cd", "6660a300d54779a40c26d4ea")
+    # post_service.reply_to_reply("665c3221447867a69e1d51dd", "65f7e03cf2d605e647ba0168", "测试回复",
+    #                             "6660a2fcd54779a40c26c0cd", "6660a300d54779a40c26d4ea")
     # post_service.find_replies("665c3221447867a69e1d51dd", 0, 10)
     # print(post_service.find_replies_of_reply("665c3221447867a69e1d51dd", "665ec1a1e39c0862b3056a4f", 0, 10))
     # print(post_service.find_one_reply("665c3221447867a69e1d51dd", "665ec1a1e39c0862b3056a4f"))
@@ -426,5 +511,8 @@ if __name__ == '__main__':
     #         post_service.reply_to_reply(post_id, random.choice(users), "回复的回复" + str(i), root_reply_id)
     #     num_replies -= 1
 
-    reply = post_service.find_chain_reply("665c3221447867a69e1d51dd", "6660a2fcd54779a40c26c0ce", "6660a5889d0d804a04f1ac69")
-    pprint.PrettyPrinter().pprint(reply)
+    # reply = post_service.find_chain_reply("665c3221447867a69e1d51dd", "6660a2fcd54779a40c26c0ce", "6660a5889d0d804a04f1ac69")
+    # pprint.PrettyPrinter().pprint(reply)
+    # post_service.find_hottest_posts(0, 4)
+    # post_service.find_new_posts(0, 4)
+    pprint.PrettyPrinter().pprint(post_service.find_post_by_labels(["测试", "帖子"], 0, 10))

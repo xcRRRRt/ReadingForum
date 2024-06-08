@@ -21,7 +21,73 @@ book_service = BookService()
 
 
 def homepage(request):
-    return render(request, "forum/home.html")
+    new_books = book_service.find_new_books(0, 8)
+    new_posts = post_service.find_new_posts(0, 6)
+    for post in new_posts:
+        userinfo = userinfo_service.find_userinfo_by_id(post['author'], "avatar_url", "username")
+        post['author'] = userinfo.get("username")
+        post['author_avatar_url'] = userinfo.get("avatar_url")
+        # 找出content中的第一张图片
+        content = post.get("content")
+        soup = BeautifulSoup(content, "html.parser")
+        post['brief_content'] = soup.get_text()
+        first_img = soup.find("img")
+        if first_img:
+            src = first_img.get("src")
+            if src:
+                post["first_img_src"] = src
+        if "bound_book" in post:
+            book = book_service.find_book_by_id(post["bound_book"], "title", "isbn")
+            post["bound_book"] = book
+
+    return render(request, "forum/home.html",
+                  {"new_books": new_books, "new_posts": new_posts})
+
+
+class PostListView(views.View):
+    paginator_new = PaginatorFromFunction(post_service.find_new_posts, 10)
+    paginator_hot = PaginatorFromFunction(post_service.find_hottest_posts, 10)
+
+    def get(self, request):
+        change_part = request.GET.get("cp")
+        if change_part == "new":
+            self.paginator_new.page = int(request.GET.get("page", 1))
+        if change_part == "hot":
+            self.paginator_hot.page = int(request.GET.get("page", 1))
+        new_posts = self._post_process(self.paginator_new.from_function())
+        hottest_posts = self._post_process(self.paginator_hot.from_function())
+        page_info = {
+            "new": self.paginator_new.page_info,
+            "hot": self.paginator_hot.page_info
+        }
+        print(page_info)
+        context = {"new_posts": new_posts, "hottest_posts": hottest_posts, "paginator": page_info}
+        return render(request, "forum/post_list.html", context)
+
+    def _post_process(self, posts):
+        for post in posts:
+            userinfo = userinfo_service.find_userinfo_by_id(post['author'], "avatar_url", "username")
+            post['author'] = userinfo.get("username")
+            post['author_avatar_url'] = userinfo.get("avatar_url")
+            # 找出content中的第一张图片
+            content = post.get("content")
+            soup = BeautifulSoup(content, "html.parser")
+            post['brief_content'] = soup.get_text()
+            first_img = soup.find("img")
+            if first_img:
+                src = first_img.get("src")
+                if src:
+                    post["first_img_src"] = src
+            if "bound_book" in post:
+                book = book_service.find_book_by_id(post["bound_book"], "title", "isbn")
+                post["bound_book"] = book
+            if 'labels' in post:
+                label = post.get("labels", '').split(",")
+                post["labels"] = label
+        return posts
+
+    def post(self, request):
+        pass
 
 
 class EditorView(views.View):
@@ -155,40 +221,53 @@ class SearchResultView(views.View):
     paginator_user = PaginatorFromFunction(userinfo_service.find_userinfos_by_username, per_page=12)
     paginator_book = PaginatorFromFunction(book_service.find_book_by_isbn_or_title, per_page=8)
     paginator_post = PaginatorFromFunction(post_service.text_search_posts, per_page=5)
+    paginators = {'user': paginator_user, 'book': paginator_book, 'post': paginator_post}
 
     def get(self, request):
         query: str = request.GET.get("q")
+        print(query)
         if query:
             queries = query.split(" ")
-        else:
-            return HttpResponse()
 
-        show_part: str = request.GET.get("sp", "all")
-        if show_part not in ['user', 'book', 'post', 'all']:
-            show_part = 'all'
+        page_now = None
+        has_prev = None
+        has_next = None
+        page_prev = None
+        page_next = None
 
-        if show_part == 'user':
-            page = int(request.GET.get("page", self.paginator_user.page))
-            limit = int(request.GET.get('limit', self.paginator_user.per_page))
-            self.paginator_user.page = page
-            self.paginator_user.per_page = limit
-        elif show_part == 'book':
-            page = int(request.GET.get("page", self.paginator_book.page))
-            limit = int(request.GET.get('limit', self.paginator_book.per_page))
-            self.paginator_book.page = page
-            self.paginator_book.per_page = limit
-        elif show_part == 'post':
-            page = int(request.GET.get("page", self.paginator_post.page))
-            limit = int(request.GET.get('limit', self.paginator_post.per_page))
-            self.paginator_post.page = page
-            self.paginator_post.per_page = limit
-        elif show_part == 'all':
+        parts = ['user', 'book', 'post']
+
+        show_part: List = request.GET.getlist("sp", parts)
+        show_part = list(filter(lambda x: x in parts, show_part))
+
+        show_all: bool = False
+        show_user: bool = 'user' in show_part
+        show_book: bool = 'book' in show_part
+        show_post: bool = 'post' in show_part
+
+        if len(show_part) > 1:
+            show_all = True
             self.paginator_user.page = 1
             self.paginator_book.page = 1
             self.paginator_post.page = 1
             self.paginator_user.per_page = 4
             self.paginator_book.per_page = 4
             self.paginator_post.per_page = 5
+        else:
+            if 'user' in show_part:
+                limit = int(request.GET.get('limit', 12))
+            elif 'book' in show_part:
+                limit = int(request.GET.get('limit', 8))
+            elif 'post' in show_part:
+                limit = int(request.GET.get('limit', 5))
+            else:
+                limit = 100
+            for part in show_part:
+                if part in self.paginators:
+                    paginator = self.paginators[part]
+                    page = int(request.GET.get("page", self.paginator_post.page))
+                    paginator.page = page
+                    paginator.per_page = limit
 
         users = self.paginator_user.from_function(username="".join(queries))
         users = list(filter(lambda user: user['username'] != request.session.get("username"), users))
@@ -231,9 +310,100 @@ class SearchResultView(views.View):
         print(len(posts))
         print(len(labels))
 
-        return render(request, "forum/search_result.html",
-                      {"users": users, "books": books, "posts": posts, "labels": labels, "query": query,
-                       'show_part': show_part})
+        if not show_all:
+            for part in show_part:
+                if part in self.paginators:
+                    paginator = self.paginators[part]
+                    page_now = paginator.page
+                    has_prev = paginator.has_prev
+                    has_next = paginator.has_next
+                    page_prev = paginator.previous
+                    page_next = paginator.next
+
+        context = {
+            "users": users, "books": books, "posts": posts, "labels": labels, "query": query,
+            'has_prev': has_prev, "has_next": has_next, 'page_now': page_now, 'page_prev': page_prev, 'page_next': page_next,
+            'show_part': len(show_part), "show_user": show_user, "show_book": show_book, "show_post": show_post, "show_all": show_all
+        }
+
+        print(context)
+
+        return render(request, "forum/search_result.html", context)
 
     def post(self, request):
+        pass
+
+
+class LabelSearchResultView(views.View):
+    book_paginator = PaginatorFromFunction(book_service.find_book_by_labels)
+    post_paginator = PaginatorFromFunction(post_service.find_post_by_labels)
+
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get("label", "").strip()
+        query = query.split(" ")
+        print(query)
+        page = int(request.GET.get("page", 1))
+        show_part = request.GET.get("sp", "both")
+        if show_part not in ["post", "book", "both"]:
+            show_part = "both"
+        if show_part == "both":
+            self.book_paginator.page = 1
+            self.book_paginator.per_page = 4
+            self.post_paginator.page = 1
+            self.post_paginator.per_page = 5
+        else:
+            if show_part == "book":
+                self.book_paginator.page = page
+                self.book_paginator.per_page = 8
+            if show_part == "post":
+                self.post_paginator.page = page
+                self.post_paginator.per_page = 6
+        self.book_paginator.page_info = dict(sp=show_part, label=query)
+        self.post_paginator.page_info = dict(sp=show_part, label=query)
+
+        books = self._process_book(self.book_paginator.from_function(labels=query))
+        posts = self._post_process(self.post_paginator.from_function(labels=query))
+
+        page_info = {
+            "book": self.book_paginator.page_info,
+            "post": self.post_paginator.page_info
+        }
+        context = {
+            "books": books,
+            "posts": posts,
+            "page_info": page_info,
+            "show_part": show_part,
+            "query_labels": query,
+        }
+        return render(request, "forum/label_search_result.html", context)
+
+    def _post_process(self, posts):
+        for post in posts:
+            userinfo = userinfo_service.find_userinfo_by_id(post['author'], "avatar_url", "username")
+            post['author'] = userinfo.get("username")
+            post['author_avatar_url'] = userinfo.get("avatar_url")
+            # 找出content中的第一张图片
+            content = post.get("content")
+            soup = BeautifulSoup(content, "html.parser")
+            post['brief_content'] = soup.get_text()
+            first_img = soup.find("img")
+            if first_img:
+                src = first_img.get("src")
+                if src:
+                    post["first_img_src"] = src
+            if "bound_book" in post:
+                book = book_service.find_book_by_id(post["bound_book"], "title", "isbn")
+                post["bound_book"] = book
+            if 'labels' in post:
+                label = post.get("labels", '').split(",")
+                post["labels"] = label
+        return posts
+
+    def _process_book(self, books):
+        for book in books:
+            if "label" in book:
+                book["label"] = book.get("label").split(",")
+        return books
+
+    def post(self, request, *args, **kwargs):
         pass

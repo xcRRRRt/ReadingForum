@@ -10,5 +10,8 @@ urlpatterns = [
     path("detail-post/<post_id>/reply/<root_reply_id>/", views.ReplyReplyView.as_view(), name="reply_reply"),
 
     path("search/", views.SearchResultView.as_view(), name='search'),
+    path("search-labels/", views.LabelSearchResultView.as_view(), name='search_labels'),
+
+    path("post/", views.PostListView.as_view(), name="post_list")
 
 ]

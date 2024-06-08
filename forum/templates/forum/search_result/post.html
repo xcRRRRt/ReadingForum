@@ -1,0 +1,57 @@
+{% load static %}
+
+{% if show_post %}
+  <div class="mb-3 module-block">
+    <span class="my-2 fs-6 fw-bolder text-muted">帖子</span>
+    {% if show_all and posts %}
+      <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=post">查看更多>></a>
+    {% endif %}
+    <div class="d-flex flex-column" {% if show_part == 1 %}style="min-height: 60vh"{% endif %}>
+      {% if posts %}
+        <div class="flex-fill">
+          {% for post in posts %}
+            <div class="m-2 p-1 border rounded-3 post-block">
+
+              {# 发布者信息 #}
+              <div id="author-info" class="d-flex align-items-center ms-3 mt-2">
+                <img id="avatar-medium"
+                     src="{% if post.author_avatar_url %}{{ post.author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                     alt="头像">
+                <div class="ms-3">
+                  <a href="{% url 'userinfo' post.author_name %}">{{ post.author_name }}</a>
+                  <div class="text-secondary">{{ post.post_time }}</div>
+                </div>
+              </div>
+
+              <div class="my-2 ms-3">
+                <a class="post-title-mini" href="{% url 'detail_post' post.id %}">
+                  <span>{{ post.title }}</span>
+                </a>
+              </div>
+
+              <div class="ms-3 post-content-truncated d-flex flex-column">
+                {{ post.brief_content|truncatechars:200 }}
+                <img class="mb-2" src="{{ post.first_img_src }}">
+              </div>
+
+              <div class="d-flex flex-wrap px-2 label-all" style="position: relative">
+                {% if post.labels %}
+                  {% for label in post.labels %}
+                    <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">
+                      <span>{{ label }}</span>
+                    </a>
+                  {% endfor %}
+                {% endif %}
+              </div>
+
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="border rounded-3 m-2 fs-6">
+          <div class="module-not-found my-5 text-center text-light-emphasis">没有找到帖子╥﹏╥...</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

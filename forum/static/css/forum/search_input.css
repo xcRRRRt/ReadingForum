@@ -1,0 +1,8 @@
+#search-input-wrapper {
+    width: 70%;
+    transition: width 0.4s ease;
+}
+
+#search-input-wrapper:focus-within {
+    width: 90%;
+}

@@ -21,7 +21,7 @@
             <img src="{% static 'img/default_book_cover.png' %}">
           {% endif %}
           <div class="card-body">
-            <h1 id="book-title" class="card-title">{{ book.title }}</h1>
+            <h3 id="book-title" class="card-title">{{ book.title }}</h3>
             <div id="book-introduction" class="card-text">
               {{ book.introduction|linebreaks }}
             </div>
@@ -47,9 +47,9 @@
             <div class="mb-2 book-detail-subtitle">作品标签</div>
             <div class="d-flex flex-wrap" style="position: relative">
               {% for label in book.label %}
-                <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+                <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">
                   <span>{{ label }}</span>
-                </div>
+                </a>
               {% endfor %}
             </div>
           </div>

@@ -117,35 +117,25 @@ def reset_password(request):
     return render(request, "user/reset_password.html", {"form": form})
 
 
-# @AuthRequired.login_required()
-# def userinfo(request):
-#     """用户个人中心"""
-#     email = userinfo_service.get_email(request.session.get('username'))
-#     register_time = userinfo_service.get_register_time(request.session.get('username'))
-#     data = {"email": email, "register_time": register_time}
-#     return render(request, 'user/userinfo.html', data)
-#
-#
-# def userinfo_other(request, username):
-#     """
-#     其他用户主页
-#     """
-#     user = userinfo_service.find_userinfo_by_username(username, "username", "avatar_url", "introduction")
-#     register_time = userinfo_service.get_register_time(username)
-#     return render(request, 'user/userinfo_other_user.html', {"userinfo": user, "register_time": register_time})
-
 @AuthRequired.login_required()
 def userinfo(request, username):
-    print(username, 1)
-    if username == request.session.get("username"):
-        email = userinfo_service.get_email(request.session.get('username'))
-        register_time = userinfo_service.get_register_time(request.session.get('username'))
-        data = {"email": email, "register_time": register_time}
-        return render(request, 'user/userinfo.html', data)
-    else:
-        user = userinfo_service.find_userinfo_by_username(username, "username", "avatar_url", "introduction")
-        register_time = userinfo_service.get_register_time(username)
-        return render(request, 'user/userinfo_other_user.html', {"userinfo": user, "register_time": register_time})
+    user = userinfo_service.find_userinfo_by_username(username, "username", "avatar_url", "introduction")
+    email = userinfo_service.get_email(request.session.get('username'))
+    register_time = userinfo_service.get_register_time(request.session.get('username'))
+    posts_num = userinfo_service.get_posts_num(username)
+    comments_num = userinfo_service.get_comments_num(username)
+    replies_num = userinfo_service.get_replies_num(username)
+    context = {
+        "email": email,
+        "register_time": register_time,
+        "posts_num": posts_num,
+        "comments_num": comments_num,
+        "replies_num": replies_num
+    }
+    context.update(user)
+    if username != request.session.get("username"):
+        del context['email']
+    return render(request, 'user/userinfo.html', context)
 
 
 @AuthRequired.login_required()
@@ -156,10 +146,9 @@ def profile(request):
     fields_name = list(userinfo_form.fields.keys())  # 获取表单字段名
     # 设置表单初始值
     userinfo_form.initial = userinfo_service.find_userinfo_by_username(request.session.get('username'), *fields_name)
-    addresses = userinfo_service.find_userinfo_by_username(request.session.get('username'), 'addresses').get(
-        "addresses")
+    addresses = userinfo_service.find_userinfo_by_username(request.session.get('username'), 'addresses').get("addresses")
     return render(request, 'user/userinfo_edit.html',
-                  {"edit_avatar_form": edit_avatar_form, "userinfo_form": userinfo_form, "addresses": addresses})
+                  {"edit_avatar_form": edit_avatar_form, "userinfo_form": userinfo_form, "addresses": addresses, "avatar_url": request.session.get('avatar_url')})
 
 
 def profile_other(request, username):
@@ -177,7 +166,7 @@ def profile_other(request, username):
         "introduction": user.get("introduction")
     })
 
-    return render(request, 'user/userinfo_no_edit_other_user.html', {"userinfo": user, "userinfo_form": userinfo_form})
+    return render(request, 'user/userinfo_no_edit_other_user.html', {"userinfo": user, "userinfo_form": userinfo_form, "avatar_url": user.get("avatar_url")})
 
 
 @AuthRequired.login_required()

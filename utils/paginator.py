@@ -245,6 +245,7 @@ class Paginator:
 
 class PaginatorFromFunction:
     def __init__(self, func: Callable, per_page: int = 10):
+        self._params = ""
         self.func = func
         self._per_page = per_page
         self._page = 1
@@ -261,7 +262,7 @@ class PaginatorFromFunction:
 
     @page.setter
     def page(self, value):
-        if not value:
+        if value is None:
             value = 1
         self._page = value
         self._skip = (self._page - 1) * self._per_page
@@ -311,6 +312,27 @@ class PaginatorFromFunction:
             self._has_next = True if self._per_page + 1 == len(objs) else False
             return self._clean_data(objs[:self._per_page])
 
+    @property
+    def page_info(self):
+        return {
+            "page": self.page,
+            "has_prev": self.has_prev,
+            "has_next": self.has_next,
+            "prev": self.previous,
+            "next": self.next,
+            "params": self._params
+        }
+
+    @page_info.setter
+    def page_info(self, kwargs):
+        params = ""
+        for key, value in kwargs.items():
+            if isinstance(value, list):
+                params += f"&{key}={'+'.join(value)}"
+            else:
+                params += f"&{key}={value}"
+        self._params = params
+
     def _clean_data(self, data):
         """
         清理数据，防止有对象
@@ -339,6 +361,8 @@ class PaginatorFromFunction:
         else:
             # 如果数据类型不是列表、字典、字符串或数字，则将其转换为字符串
             return str(data)
+
+
 
 # if __name__ == '__main__':
 #     book_service = BookService()

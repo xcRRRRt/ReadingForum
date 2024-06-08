@@ -11,10 +11,10 @@
     min-width: 6rem;
 }
 
-#navbar-container {
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-    top: 0;
-    background-color: white
-}
+/*#navbar-container {*/
+/*    position: fixed;*/
+/*    width: 100%;*/
+/*    z-index: 1000;*/
+/*    top: 0;*/
+/*    background-color: white*/
+/*}*/

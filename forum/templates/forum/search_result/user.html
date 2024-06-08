@@ -1,0 +1,47 @@
+{% load static %}
+
+{% if show_user %}
+  <div class="mb-3">
+    <span class="my-2 fs-6 fw-bolder text-muted">用户</span>
+    {% if show_all and users %}
+      <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=user">查看更多>></a>
+    {% endif %}
+    <div class="m-2 d-flex flex-column" {% if show_part == 1 %}style="min-height: 60vh"{% endif %}>
+      {% if users %}
+        <div class="row flex-fill">
+          {% for user in users %}
+            <div class="col-3 position-relative">
+              <div class="border rounded-3 mb-2 d-flex">
+                <div class="m-2">
+                  <img class="rounded-5 object-fit-cover" style="height: 38px;width: 38px"
+                       src="{% if user.avatar_url %}
+                          {{ user.avatar_url }}
+                        {% else %}
+                          {% static 'img/default_avatar.svg' %}
+                        {% endif %}" alt="用户头像">
+                </div>
+                <div class="ms-1 mt-1">
+                  <a class="text-decoration-none text-body"
+                     href="{% url 'userinfo' user.username %}">{{ user.username }}</a>
+                  <div class="text-muted" style="font-size: 13px">{{ user.introduction|truncatechars:20 }}</div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        
+        {% if not show_all %}
+          <div class="fs-6 mt-2 d-flex justify-content-center gap-3">
+            <a>上一页</a>
+            <span>888</span>
+            <a>下一页</a>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="border rounded-3 m-2 fs-6">
+          <div class="module-not-found my-5 text-center text-light-emphasis">没有找到用户╥﹏╥...</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

@@ -50,3 +50,8 @@ if __name__ == "__main__":
         collection = db.create_collection(collection_name)
         res = collection.create_index([('label', 1)])
         print(collection.index_information())
+
+    collection_name = "label"
+    print(collection_name)
+    if collection_name not in db.list_collection_names():
+        collection = db.create_collection(collection_name)

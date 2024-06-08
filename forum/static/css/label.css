@@ -10,25 +10,34 @@
     /*transition-timing-function: ease;*/
 }
 
+.label-wrapper.label-highlight {
+    background-color: rgb(248, 215, 218);
+    border-color: rgb(208, 175, 178);
+}
+
+/*.label-wrapper-mini span {*/
+/*    font-size: 10px;*/
+/*}*/
+
 @keyframes rotate {
     0% {
-        transform: rotate(0);
+        transform: rotate(0) scale(1.1);
     }
 
     20% {
-        transform: rotate(-2deg);
+        transform: rotate(-2deg) scale(1.1);
     }
 
     60% {
-        transform: rotate(0);
+        transform: rotate(0) scale(1.1);
     }
 
     80% {
-        transform: rotate(2deg);
+        transform: rotate(2deg) scale(1.1);
     }
 
     100% {
-        transform: rotate(0);
+        transform: rotate(0) scale(1.1);
     }
 }
 
@@ -36,6 +45,12 @@
     color: #eeeeee;
     background-color: #177ed2;
     border-color: #177ed2;
-    transform: scale(1.1, 1.1);
+    animation: rotate 0.3s ease infinite;
+}
+
+.label-wrapper.label-highlight:hover {
+    color: #eeeeee;
+    background-color: rgb(220, 53, 69);
+    border-color: rgb(220, 53, 69);
     animation: rotate 0.3s ease infinite;
 }

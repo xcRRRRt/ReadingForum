@@ -1,10 +1,13 @@
 import datetime
 import math
+import pprint
 import random
 from typing import *
+from typing import Tuple, Any
 
 from bson import ObjectId
 from pymongo.results import UpdateResult, InsertOneResult
+from utils.datetime_util import get_datetime_by_objectId
 
 from utils.db_operation import MongodbOperation
 from user.service.userinfo_service import UserInfoService
@@ -63,16 +66,14 @@ class BookService:
         return res_update.acknowledged and res_delete.acknowledged
 
     def push_comment(self, book_id: str, user_id: str | ObjectId, comment: str) -> UpdateResult:
+        doc = {
+            "id": ObjectId(),
+            "user_id": ObjectId(user_id),
+            "comment": comment,
+        }
         res = self.db.book_update_one({'_id': ObjectId(book_id)},
-                                      {
-                                          '$push': {
-                                              'comments': {
-                                                  "user_id": ObjectId(user_id),
-                                                  "comment": comment,
-                                                  "time": datetime.datetime.now()
-                                              }
-                                          }
-                                      })
+                                      {'$push': {'comments': doc}})
+        userinfo_service.add_comments(user_id, book_id, doc['id'])
         return res
 
     def push_post(self, book_id: str | ObjectId, post_id: str | ObjectId) -> UpdateResult:
@@ -82,13 +83,16 @@ class BookService:
         )
         return res
 
-    def find_book_comments(self, book_id: str, skip: int, limit: int, sort_by: dict[str, int]) -> List[
-        Mapping[str, Any]]:
+    def find_book_comments(self, book_id: str, skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
+        sort = dict()
+        for k, v in sort_by.items():
+            if k == 'time':
+                sort['id'] = v
         pipeline = [
             {'$match': {'_id': ObjectId(book_id)}},
             {'$unwind': '$comments'},
             {'$replaceRoot': {'newRoot': '$comments'}},
-            {'$sort': sort_by},
+            {'$sort': sort},
             {'$skip': skip},
             {'$limit': limit},
         ]
@@ -97,7 +101,7 @@ class BookService:
         formatted_comments = []
 
         for comment in comments:
-            comment['time'] = comment['time'].strftime('%Y年%m月%d日 %H:%M')
+            comment['time'] = get_datetime_by_objectId(comment.get("id"))
             user_info = userinfo_service.find_userinfo_by_id(comment['user_id'], "avatar_url", "username")
             comment.update(user_info)
             formatted_comments.append(comment)
@@ -122,11 +126,91 @@ class BookService:
         return books
 
     def find_book_by_labels(self, labels: list[str], skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
-        filter_ = {"label": {"$all": labels}}
-        cursor = self.db.book_find(filter_)  # 惰性查询
+        pipeline = [
+            {"$match": {"label": {"$in": labels}}},
+            {
+                "$addFields": {
+                    "match_label_count": {
+                        "$size": {
+                            "$setIntersection": ["$label", labels]
+                        }
+                    }
+                }
+            },
+            {"$sort": {"match_label_count": -1}},
+            {"$skip": skip},
+            {"$limit": limit}
+        ]
+        books = list(self.db.book_aggregate(pipeline))
+        for book in books:
+            book["id"] = str(book["_id"])
+            del book["_id"]
+        return books
+
+    def find_new_books(self, skip: int, limit: int, sort_by=None) -> List[Dict[str, Any]]:
+        """
+
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        if sort_by is None:
+            sort_by = {"_id": -1}
+        cursor = self.db.book_find({}, projection={'title': 1,
+                                                   'isbn': 1,
+                                                   'cover': 1,
+                                                   'introduction': 1,
+                                                   'label': 1,
+                                                   'comment_count': 1,
+                                                   'post_count': 1, })
         if sort_by:
             cursor = cursor.sort(sort_by)
-        books = list(cursor.limit(limit).skip(skip))
+        books = list(cursor.skip(skip).limit(limit))
+        for book in books:
+            book["id"] = str(book["_id"])
+            del book["_id"]
+        return books
+
+    def find_hottest_books(self, skip: int, limit: int, sort_by=None) -> List[Dict[str, Any]]:
+        """
+
+        :param skip:
+        :param limit:
+        :param sort_by:
+        :return:
+        """
+        # if sort_by is None:
+        #     sort_by = {}
+        pipeline = [
+            {
+                "$set": {
+                    "comment_count": {"$size": {"$ifNull": ["$comments", []]}},
+                    "post_count": {"$size": {"$ifNull": ["$posts", []]}}
+                }
+            },
+            {
+                "$project": {
+                    'title': 1,
+                    'isbn': 1,
+                    'cover': 1,
+                    'introduction': 1,
+                    'label': 1,
+                    'comment_count': 1,
+                    'post_count': 1,
+                    'comment_post_count': {
+                        "$add": ["$comment_count", "$post_count"]
+                    }
+                }
+            },
+            {
+                "$sort": {"comment_post_count": -1}
+            },
+            {"$skip": skip},
+            {"$limit": limit}
+        ]
+        books = list(self.db.book_aggregate(pipeline))
+        # pprint.PrettyPrinter().pprint(books)
         for book in books:
             book["id"] = str(book["_id"])
             del book["_id"]
@@ -139,5 +223,7 @@ if __name__ == "__main__":
     #     book_service.create_book(isbn=str(random.randint(100000, 999999)), title="图书" + str(i),
     #                              price=round(random.random() * 100, 2), stock=random.randint(1, 100))
     # print(book_service.find_book_comments("66367f4d787d221d08173540", 0, 10, {"time": 1}))
-    print(book_service.find_book_by_isbn_or_title("孙子", skip=0, limit=10, sort_by={}))
-    # print(book_service.find_book_by_labels(['102', '96'], 0, 10, {}))
+    # print(book_service.find_book_by_isbn_or_title("孙子", skip=0, limit=10, sort_by={}))
+    pprint.PrettyPrinter().pprint(book_service.find_book_by_labels(['102', '96'], 0, 10, {}))
+    # print(book_service.find_new_books(0, 5))
+    # book_service.find_hottest_books(0, 4)

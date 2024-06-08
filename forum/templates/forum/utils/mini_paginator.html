@@ -1,0 +1,13 @@
+<div class="d-flex justify-content-center gap-3">
+  {% if paginator.has_prev %}
+    <a class="text-decoration-none" href="{{ url }}?page={{ paginator.prev }}{{ paginator.params }}">&lt;&lt;</a>
+  {% else %}
+    <a class="text-decoration-none text-black-50">&lt;&lt;</a>
+  {% endif %}
+  <span class="text-dark">{{ paginator.page }}</span>
+  {% if paginator.has_next %}
+    <a class="text-decoration-none" href="{{ url }}?page={{ paginator.next }}{{ paginator.params }}">&gt;&gt;</a>
+  {% else %}
+    <a class="text-decoration-none text-black-50">&gt;&gt;</a>
+  {% endif %}
+</div>

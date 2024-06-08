@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+  {% include 'forum/create_post_btn.html' %}
   <div class="container">
     <div class="mx-5 row">
       <nav aria-label="breadcrumb" class="pt-2">
@@ -14,172 +15,28 @@
       <div class="col-9">
 
         {# 用户 #}
-        {% if show_part == 'all' or show_part == 'user' %}
-          <div class="mb-3">
-            <span class="my-2 fs-6 fw-bolder text-muted">用户</span>
-            {% if show_part == 'all' %}
-              <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=user">查看更多>></a>
-            {% endif %}
-            <div class="m-2">
-              {% if users %}
-                <div class="row">
-                  {% for user in users %}
-                    <div class="col-3 position-relative">
-                      <div class="border rounded-3 mb-2 d-flex">
-                        <div class="m-2">
-                          <img class="rounded-5 object-fit-cover" style="height: 38px;width: 38px"
-                               src="{% if user.avatar_url %}
-                          {{ user.avatar_url }}
-                        {% else %}
-                          {% static 'img/default_avatar.svg' %}
-                        {% endif %}" alt="用户头像">
-                        </div>
-                        <div class="ms-1 mt-1">
-                          <a class="text-decoration-none text-body"
-                             href="{% url 'userinfo' user.username %}">{{ user.username }}</a>
-                          <div class="text-muted" style="font-size: 13px">{{ user.introduction|truncatechars:20 }}</div>
-                        </div>
-                      </div>
-                    </div>
-                  {% endfor %}
-
-                </div>
-              {% else %}
-                <div class="border rounded-3 m-2 fs-6">
-                  <div class="module-not-found my-5 text-center text-light-emphasis">没有找到用户╥﹏╥...</div>
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        {% endif %}
+        {% include 'forum/search_result/user.html' %}
 
         {# 图书 #}
-        {% if show_part == 'all' or show_part == 'book' %}
-          <div class="mb-3 module-block">
-            <span class="my-2 fs-6 fw-bolder text-muted">图书</span>
-            {% if show_part == "all" %}
-              <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=book">查看更多>></a>
-            {% endif %}
-            <div class="m-2">
-              {% if books %}
-                <div class="row">
-                  {% for book in books %}
-                    <div class="col-3 position-relative">
-                      <div class="border rounded-3 mb-2 book-block">
-                        {# 书籍封面 #}
-                        <img class="rounded-top-3 object-fit-cover" src="
-                         {% if book.cover %}
-                            {{ book.cover }}
-                         {% else %}
-                            {% static 'img/default_book_cover.png' %}
-                         {% endif %}
-                          " style="width: 100%;height: 270px" alt="书籍封面">
-                        {# 书籍信息 #}
-                        <div class="mx-2 mt-2 text-muted">
-                          <div class="fs-6">
-                            <a class="text-body text-decoration-none"
-                               href="{% url 'book_detail' book.id %}">{{ book.title }}</a>
-                          </div>
-                          <div>
-                            <span>ISBN:</span>
-                            <span>{{ book.isbn }}</span>
-                          </div>
-                        </div>
-
-                        <div class="d-flex flex-wrap px-2 mt-2 label-all" style="position: relative">
-                          {% if book.label %}
-                            {% for label in book.label %}
-                              <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
-                                <span>{{ label }}</span>
-                              </div>
-                            {% endfor %}
-                          {% endif %}
-                        </div>
-
-                      </div>
-                    </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="border rounded-3 m-2 fs-6">
-                  <div class="module-not-found my-5 text-center text-light-emphasis">没有找到图书╥﹏╥...</div>
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        {% endif %}
+        {% include 'forum/search_result/book.html' %}
 
         {# 帖子 #}
-        {% if show_part == 'all' or show_part == 'post' %}
-          <div class="mb-3 module-block">
-            <span class="my-2 fs-6 fw-bolder text-muted">帖子</span>
-            {% if show_part == 'all' %}
-              <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=post">查看更多>></a>
-            {% endif %}
-            <div>
-              {% if posts %}
-                {% for post in posts %}
-                  <div class="m-2 p-1 border rounded-3 post-block">
-
-                    {# 发布者信息 #}
-                    <div id="author-info" class="d-flex ms-3 mt-2">
-                      <img id="avatar-mini"
-                           src="{% if post.author_avatar_url %}{{ post.author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
-                           alt="头像">
-                      <div class="ms-3">
-                        <a href="{% url 'userinfo' post.author_name %}">{{ post.author_name }}</a>
-                        <div class="text-secondary">{{ post.post_time }}</div>
-                      </div>
-                    </div>
-
-                    <div class="my-2 ms-3">
-                      <a class="post-title-mini" href="{% url 'detail_post' post.id %}">
-                        <span>{{ post.title }}</span>
-                      </a>
-                    </div>
-
-                    <div class="ms-3 post-content-truncated d-flex flex-column">
-                      {{ post.brief_content|truncatechars:200 }}
-                      <img class="mb-2" src="{{ post.first_img_src }}">
-                    </div>
-
-                    <div class="d-flex flex-wrap px-2 label-all" style="position: relative">
-                      {% if post.labels %}
-                        {% for label in post.labels %}
-                          <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
-                            <span>{{ label }}</span>
-                          </div>
-                        {% endfor %}
-                      {% endif %}
-                    </div>
-
-                  </div>
-                {% endfor %}
-              {% else %}
-                <div class="border rounded-3 m-2 fs-6">
-                  <div class="module-not-found my-5 text-center text-light-emphasis">没有找到帖子╥﹏╥...</div>
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        {% endif %}
+        {% include 'forum/search_result/post.html' %}
 
       </div>
 
       <div class="col-3">
         {# 标签 #}
-        <div>
+        {% if labels %}
           <div class="my-2 fs-6 text-muted fw-bolder">标签</div>
           <div class="d-flex flex-wrap">
             {% for label in labels %}
-              <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+              <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">
                 <span>{{ label }}</span>
-              </div>
+              </a>
             {% endfor %}
           </div>
-        </div>
-
-
+        {% endif %}
       </div>
 
     </div>

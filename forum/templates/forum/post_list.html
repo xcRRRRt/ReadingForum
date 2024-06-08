@@ -1,0 +1,192 @@
+{% extends 'base_forum.html' %}
+{% load static %}
+
+{% block content %}
+
+  {% include 'forum/create_post_btn.html' %}
+  <div class="container">
+    <div class="mx-5 mt-2 row">
+      <div class="col-6">
+
+        <div class="mt-3">
+          <div class="w-100 bg-info-subtle">
+            <span class="my-2 ms-2 fs-6 fw-bolder text-muted">最新帖子</span>
+            {#            <a class="ms-3 text-decoration-none" href="#" style="font-size: 13px">查看更多&gt;&gt;</a>#}
+          </div>
+
+          <div class="m-2 d-flex flex-column">
+
+            {% for new_post in new_posts %}
+              {# 一个帖子 #}
+              <div class="m-1 p-1 border rounded-3 home-page-post">
+                {# 标题 #}
+                <div class="my-1 ms-3">
+                  <a class="post-title-mini" href="{% url 'detail_post' new_post.id %}">
+                    <span>{{ new_post.title }}</span>
+                  </a>
+                </div>
+                {# 内容 #}
+                <div class="ms-3 my-1 post-content-truncated d-flex flex-column post-content-hover-show" style="font-size: 13px">
+                  {{ new_post.brief_content|safe|truncatechars:100 }}
+                </div>
+                {# 隐藏部分下侧 #}
+                <div class="post-hover-show {% if not new_post.first_img_src %}without-img{% endif %} ms-3 {% if not new_post.labels %}without-labels{% endif %}">
+                  {# 标签 #}
+                  {% if new_post.labels %}
+                    <div class="d-flex flex-wrap mt-1" style="position: relative">
+                      {% for label in new_post.labels %}
+                        <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">
+                          <span>{{ label }}</span>
+                        </a>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  {# 用户信息 #}
+                  <div id="author-info" style="font-size: 12px" class="d-flex align-content-center my-1">
+                    <img id="avatar-mini" src="{% if new_post.author_avatar_url %}{{ new_post.author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}">
+                    <a class="ms-2 mt-1" style="font-size: 12px" href="{% url 'userinfo' new_post.author %}">{{ new_post.author }}</a>
+                    <div class="text-secondary mt-1">&nbsp;发布于&nbsp;{{ new_post.time }}</div>
+                  </div>
+                  {# 第一张图片 #}
+                  {% if new_post.first_img_src %}
+                    <img style="height: 140px;object-fit: contain" src="{{ new_post.first_img_src }}">
+                  {% endif %}
+                </div>
+                {# 隐藏部分右侧 #}
+                {% if new_post.bound_book %}
+                  <div class="rounded-end-3 bg-light hang-right">
+                    <div class="mt-2 p-2 me-3 bg-body-secondary rounded-end-3">
+                      <span class="text-black-50">《</span>
+                      <span class="hang-right-title" data-bs-toggle="tooltip" title="{{ new_post.bound_book.title }}">{{ new_post.bound_book.title|truncatechars:11 }}</span>
+                      <span class="text-black-50">》</span>
+                    </div>
+                    <div class="ps-2 mt-1 d-flex justify-content-between align-items-center position-relative">
+                      <div>
+                        <span class="text-black-50">ISBN:</span>
+                        <span>{{ new_post.bound_book.isbn }}</span>
+                      </div>
+                      <a class="me-2 stretched-link" href="{% url 'book_detail' new_post.bound_book.id %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                          <path fill-rule="evenodd"
+                                d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"></path>
+                          <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"></path>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex justify-content-center gap-3">
+            {% if paginator.new.has_prev %}
+              <a class="text-decoration-none" href="{% url 'post_list' %}?cp=new&page={{ paginator.new.prev }}">&lt;&lt;</a>
+            {% else %}
+              <a class="text-decoration-none text-black-50">&lt;&lt;</a>
+            {% endif %}
+            <span class="text-dark">{{ paginator.new.page }}</span>
+            {% if paginator.new.has_next %}
+              <a class="text-decoration-none" href="{% url 'post_list' %}?cp=new&page={{ paginator.new.next }}">&gt;&gt;</a>
+            {% else %}
+              <a class="text-decoration-none text-black-50">&gt;&gt;</a>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <div class="col-6">
+        <div class="mt-3">
+          <div class="w-100 bg-danger-subtle">
+            <span class="my-2 ms-2 fs-6 fw-bolder text-muted">热门帖子</span>
+            <a class="ms-3 text-decoration-none" href="#" style="font-size: 13px">查看更多&gt;&gt;</a>
+          </div>
+        </div>
+        <div class="m-2 d-flex flex-column">
+
+          {% for hottest_post in hottest_posts %}
+            {# 一个帖子 #}
+            <div class="m-1 p-1 border rounded-3 home-page-post">
+              {# 标题 #}
+              <div class="my-1 ms-3">
+                <a class="post-title-mini" href="{% url 'detail_post' hottest_post.id %}">
+                  <span>{{ hottest_post.title }}</span>
+                </a>
+              </div>
+              {# 内容 #}
+              <div class="ms-3 my-1 post-content-truncated d-flex flex-column post-content-hover-show" style="font-size: 13px">
+                {{ hottest_post.brief_content|safe|truncatechars:100 }}
+              </div>
+              {# 隐藏部分下侧 #}
+              <div class="post-hover-show {% if not hottest_post.first_img_src %}without-img{% endif %} ms-3 {% if not hottest_post.labels %}without-labels{% endif %}">
+                {# 标签 #}
+                {% if hottest_post.labels %}
+                  <div class="d-flex flex-wrap mt-1" style="position: relative">
+                    {% for label in hottest_post.labels %}
+                      <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">
+                        <span>{{ label }}</span>
+                      </a>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                {# 用户信息 #}
+                <div id="author-info" style="font-size: 12px" class="d-flex align-content-center my-1">
+                  <img id="avatar-mini" src="{% if hottest_post.author_avatar_url %}{{ hottest_post.author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}">
+                  <a class="ms-2 mt-1" style="font-size: 12px" href="{% url 'userinfo' hottest_post.author %}">{{ hottest_post.author }}</a>
+                  <div class="text-secondary mt-1">&nbsp;发布于&nbsp;{{ hottest_post.time }}</div>
+                </div>
+                {# 第一张图片 #}
+                {% if hottest_post.first_img_src %}
+                  <img style="height: 140px;object-fit: contain" src="{{ hottest_post.first_img_src }}">
+                {% endif %}
+              </div>
+              {# 隐藏部分右侧 #}
+              {% if hottest_post.bound_book %}
+                <div class="rounded-end-3 bg-light hang-right z-3">
+                  <div class="mt-2 p-2 me-3 bg-body-secondary rounded-end-3">
+                    <span class="text-black-50">《</span>
+                    <span class="hang-right-title" data-bs-toggle="tooltip" title="{{ hottest_post.bound_book.title }}">{{ hottest_post.bound_book.title|truncatechars:11 }}</span>
+                    <span class="text-black-50">》</span>
+                  </div>
+                  <div class="ps-2 mt-1 d-flex justify-content-between align-items-center position-relative">
+                    <div>
+                      <span class="text-black-50">ISBN:</span>
+                      <span>{{ hottest_post.bound_book.isbn }}</span>
+                    </div>
+                    <a class="me-2 stretched-link" href="{% url 'book_detail' hottest_post.bound_book.id %}">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                              d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"></path>
+                        <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"></path>
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-center gap-3">
+          {% if paginator.hot.has_prev %}
+            <a class="text-decoration-none" href="{% url 'post_list' %}?cp=hot&page={{ paginator.hot.prev }}">&lt;&lt;</a>
+          {% else %}
+            <a class="text-decoration-none text-black-50">&lt;&lt;</a>
+          {% endif %}
+          <span class="text-dark">{{ paginator.hot.page }}</span>
+          {% if paginator.hot.has_next %}
+            <a class="text-decoration-none" href="{% url 'post_list' %}?cp=hot&page={{ paginator.hot.next }}">&gt;&gt;</a>
+          {% else %}
+            <a class="text-decoration-none text-black-50">&gt;&gt;</a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <body>
+  <link rel="stylesheet" href="{% static 'css/forum/post.css' %}">
+  <link rel="stylesheet" href="{% static 'css/forum/home_page.css' %}">
+  </body>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends 'base_forum.html' %}
+{% load static %}
+
+{% block content %}
+  {% include 'forum/create_post_btn.html' %}
+  <div class="container">
+    <div class="mx-5 row">
+      <nav aria-label="breadcrumb" class="pt-2">
+        <ul class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}">首页</a></li>
+          <li class="breadcrumb-item">搜索</li>
+          <li class="breadcrumb-item" aria-current="page">标签: {% for label in query_labels %}{{ label }} {% endfor %}</li>
+        </ul>
+      </nav>
+
+      <div class="col-9">
+        {% if show_part == "both" or show_part == "book" %}
+          <div class="mb-3">
+            <span class="my-2 fs-6 fw-bolder text-muted">书籍</span>
+            {% if show_part == "both" %}
+              <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search_labels' %}?sp=book&label={% for label in query_labels %}{{ label }}+{% endfor %}">查看更多&gt;&gt;</a>
+            {% endif %}
+            <div class="m-2 d-flex flex-column">
+              {% if books %}
+                <div class="row flex-fill">
+                  {% for book in books %}
+                    <div class="col-3 position-relative">
+                      <div class="border rounded-3 mb-2 book-block">
+                        {# 书籍封面 #}
+                        <img class="rounded-top-3 object-fit-cover" src="
+                         {% if book.cover %}
+                            {{ book.cover }}
+                         {% else %}
+                            {% static 'img/default_book_cover.png' %}
+                         {% endif %}
+                          " style="width: 100%;height: 270px" alt="书籍封面">
+                        {# 书籍信息 #}
+                        <div class="mx-2 mt-2 text-muted">
+                          <div class="fs-6">
+                            <a class="text-body text-decoration-none"
+                               href="{% url 'book_detail' book.id %}">{{ book.title }}</a>
+                          </div>
+                          <div style="font-size: 13px">
+                            <span>ISBN:</span>
+                            <span>{{ book.isbn }}</span>
+                          </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap px-2 mt-2" style="position: relative">
+                          {% if book.label %}
+                            {% for label in book.label %}
+                              <a class="rounded-pill px-2 me-2 mb-2 label-wrapper {% if label in query_labels %}label-highlight{% endif %}"
+                                 href="{% url 'search_labels' %}?label={{ label }}">
+                                <span>{{ label }}</span>
+                              </a>
+                            {% endfor %}
+                          {% endif %}
+                        </div>
+
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="border rounded-3 m-2 fs-6">
+                  <div class="module-not-found my-5 text-center text-light-emphasis">没有找到图书╥﹏╥...</div>
+                </div>
+              {% endif %}
+            </div>
+            {% if show_part == "book" %}
+              {% include 'forum/utils/mini_paginator.html' with paginator=page_info.book url=request.path %}
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if show_part == "both" or show_part == "post" %}
+          <div class="mb-3">
+            <span class="my-2 fs-6 fw-bolder text-muted">帖子</span>
+            {% if show_part == "both" %}
+              <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search_labels' %}?sp=post&label={% for label in query_labels %}{{ label }}+{% endfor %}">查看更多&gt;&gt;</a>
+            {% endif %}
+            <div class="d-flex flex-column">
+              {% if posts %}
+                <div class="flex-fill">
+                  {% for post in posts %}
+                    <div class="m-2 p-1 border rounded-3 post-block">
+
+                      {# 发布者信息 #}
+                      <div id="author-info" class="d-flex align-items-center ms-3 mt-2">
+                        <img id="avatar-medium"
+                             src="{% if post.author_avatar_url %}{{ post.author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                             alt="头像">
+                        <div class="ms-3">
+                          <a href="{% url 'userinfo' post.author %}">{{ post.author }}</a>
+                          <div class="text-secondary">{{ post.post_time }}</div>
+                        </div>
+                      </div>
+
+                      <div class="my-2 ms-3">
+                        <a class="post-title-mini" href="{% url 'detail_post' post.id %}">
+                          <span>{{ post.title }}</span>
+                        </a>
+                      </div>
+
+                      <div class="ms-3 post-content-truncated d-flex flex-column" style="font-size: 13px">
+                        {{ post.brief_content|truncatechars:200 }}
+                        <img class="mb-2" src="{{ post.first_img_src }}">
+                      </div>
+
+                      <div class="d-flex flex-wrap px-3" style="position: relative">
+                        {% if post.labels %}
+                          {% for label in post.labels %}
+                            <a class="rounded-pill px-2 me-2 mb-2 label-wrapper {% if label in query_labels %}label-highlight{% endif %}"
+                               href="{% url 'search_labels' %}?label={{ label }}">
+                              <span>{{ label }}</span>
+                            </a>
+                          {% endfor %}
+                        {% endif %}
+                      </div>
+
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="border rounded-3 m-2 fs-6">
+                  <div class="module-not-found my-5 text-center text-light-emphasis">没有找到帖子╥﹏╥...</div>
+                </div>
+              {% endif %}
+            </div>
+            {% if show_part == "post" %}
+              {% include 'forum/utils/mini_paginator.html' with paginator=page_info.post url=request.path %}
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+{% endblock %}

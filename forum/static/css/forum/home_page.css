@@ -1,0 +1,84 @@
+#announcement a {
+    color: #135990;
+}
+
+#announcement a:hover {
+    color: #177ed2;
+}
+
+#author-info {
+    font-size: 13px;
+}
+
+.home-page-book {
+    transition-property: transform;
+    transition-duration: 100ms;
+    transition-timing-function: linear;
+}
+
+.home-page-book:hover {
+    transform: scale(1.05, 1.05);
+}
+
+.home-page-post .post-hover-show, .home-page-book .book-hover-show {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.home-page-post:hover .post-hover-show {
+    max-height: 210px;
+    margin-bottom: 0.5rem;
+}
+
+.home-page-post:hover .post-hover-show.without-img {
+    max-height: 70px;
+}
+
+.home-page-post:hover .post-hover-show.without-labels {
+    max-height: 324px;
+}
+
+.home-page-post:hover .post-hover-show.without-labels.without-img {
+    max-height: 34px;
+}
+
+.home-page-book:hover .book-hover-show {
+    max-height: 100px;
+    margin-bottom: 0.5rem;
+}
+
+.home-page-post {
+    position: relative;
+}
+
+.hang-right {
+    position: absolute;
+    font-size: 13px;
+    top: 7px;
+    left: calc(100% + 1px);
+    height: 0;
+    max-width: 0;
+    overflow: hidden;
+    transition: max-width 0.4s ease;
+}
+
+.home-page-post:hover .hang-right {
+    max-width: 200px;
+    height: 80px;
+}
+
+.hang-right div {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+.hang-right div span, .hang-right div a {
+    white-space: nowrap;
+}
+
+.hang-right .hang-right-title {
+    font-size: 14px;
+}
+

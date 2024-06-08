@@ -19,8 +19,14 @@ post_service = PostService()
 
 
 class BookListView(views.View):
+    recommend_book_id = "6662c66119c99ad88474d8b0"
+
     def get(self, request, *args, **kwargs):
-        return render(request, 'book/book_list.html')
+        new_books = book_service.find_new_books(0, 4)
+        hottest_books = book_service.find_hottest_books(0, 4)
+        recommend_book = book_service.find_book_by_id(self.recommend_book_id, "title", "isbn", 'cover', "introduction")
+        context = {"new_books": new_books, "hottest_books": hottest_books, "recommend_book": recommend_book}
+        return render(request, 'book/book_list.html', context)
 
     def post(self, request, *args, **kwargs):
         pass
@@ -56,6 +62,7 @@ class BookDetailView(views.View):
             comment['username'] = user.get("username")
             comment['avatar_url'] = user.get("avatar_url")
             comment['user_id'] = user_id
+            comment['time'] = get_datetime_by_objectId(comment.get("id"))
             comments.append(comment)
         return comments
 

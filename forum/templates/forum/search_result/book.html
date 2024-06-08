@@ -1,0 +1,76 @@
+{% load static %}
+
+{% if show_book %}
+  <div class="mb-3 module-block">
+    <span class="my-2 fs-6 fw-bolder text-muted">图书</span>
+    {% if show_all and books %}
+      <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=book">查看更多>></a>
+    {% endif %}
+    <div class="m-2 d-flex flex-column" {% if show_part == 1 %}style="min-height: 60vh"{% endif %}>
+      {% if books %}
+        <div class="row flex-fill">
+          {% for book in books %}
+            <div class="col-3 position-relative">
+              <div class="border rounded-3 mb-2 book-block">
+                {# 书籍封面 #}
+                <img class="rounded-top-3 object-fit-cover" src="
+                         {% if book.cover %}
+                            {{ book.cover }}
+                         {% else %}
+                            {% static 'img/default_book_cover.png' %}
+                         {% endif %}
+                          " style="width: 100%;height: 270px" alt="书籍封面">
+                {# 书籍信息 #}
+                <div class="mx-2 mt-2 text-muted">
+                  <div class="fs-6">
+                    <a class="text-body text-decoration-none"
+                       href="{% url 'book_detail' book.id %}">{{ book.title }}</a>
+                  </div>
+                  <div>
+                    <span>ISBN:</span>
+                    <span>{{ book.isbn }}</span>
+                  </div>
+                </div>
+
+                <div class="d-flex flex-wrap px-2 mt-2 label-all" style="position: relative">
+                  {% if book.label %}
+                    {% for label in book.label %}
+                      <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">
+                        <span>{{ label }}</span>
+                      </a>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% if not show_all %}
+          <div class="fs-6 mt-2 d-flex justify-content-center gap-3">
+            {% if page_now == 1 %}
+              <a class="text-decoration-none text-black-50">第一页</a>
+            {% else %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=book&page=1">第一页</a>
+            {% endif %}
+            {% if has_prev %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=book&page={{ page_prev }}">&lt;&lt;</a>
+            {% else %}
+              <a class="text-black-50 text-decoration-none">&lt;&lt;</a>
+            {% endif %}
+            <span>{{ page_now }}</span>
+            {% if has_next %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=book&page={{ page_next }}">&gt;&gt;</a>
+            {% else %}
+              <a class="text-black-50 text-decoration-none">&gt;&gt;</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="border rounded-3 m-2 fs-6">
+          <div class="module-not-found my-5 text-center text-light-emphasis">没有找到图书╥﹏╥...</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

@@ -1,0 +1,10 @@
+.home-page-post .post-content-hover-show {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.home-page-post:hover .post-content-hover-show {
+    display: block !important;
+    max-height: 60px;
+}

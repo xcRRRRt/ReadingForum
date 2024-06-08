@@ -21,9 +21,9 @@
     {# 标签 #}
     <div class="d-flex flex-wrap mt-2 position-relative">
       {% for label in book.label %}
-        <div class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="#">
+        <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">
           <span>{{ label }}</span>
-        </div>
+        </a>
       {% endfor %}
     </div>
   </div>

@@ -17,7 +17,7 @@
         {% if show_part == "both" or show_part == "book" %}
           <div class="mb-3">
             <span class="my-2 fs-6 fw-bolder text-muted">书籍</span>
-            {% if show_part == "both" %}
+            {% if show_part == "both" and books %}
               <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search_labels' %}?sp=book&label={% for label in query_labels %}{{ label }}+{% endfor %}">查看更多&gt;&gt;</a>
             {% endif %}
             <div class="m-2 d-flex flex-column">
@@ -76,7 +76,7 @@
         {% if show_part == "both" or show_part == "post" %}
           <div class="mb-3">
             <span class="my-2 fs-6 fw-bolder text-muted">帖子</span>
-            {% if show_part == "both" %}
+            {% if show_part == "both" and posts %}
               <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search_labels' %}?sp=post&label={% for label in query_labels %}{{ label }}+{% endfor %}">查看更多&gt;&gt;</a>
             {% endif %}
             <div class="d-flex flex-column">

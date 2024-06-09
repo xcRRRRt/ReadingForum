@@ -8,7 +8,7 @@
       <nav aria-label="breadcrumb" class="pt-2">
         <ul class="breadcrumb">
           <li class="breadcrumb-item"><a href="{% url 'home' %}">首页</a></li>
-          <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'book-home' %}">读书</a></li>
           <li class="breadcrumb-item" aria-current="page">{{ book.title }}</li>
         </ul>
       </nav>
@@ -36,6 +36,10 @@
           <div class="col-7 mb-2">
             <div class="mb-2 book-detail-subtitle">作品信息</div>
             <div id="book-other-data" class="mb-4">
+              <div>
+                <span>ISBN:</span>
+                <span>{{ book.isbn }}</span>
+              </div>
               {% for k, v in book.book_data.items %}
                 <div>
                   <span>{{ k }}:</span>
@@ -55,23 +59,23 @@
           </div>
           {# 商品信息 #}
           <div class="col-5 border-start" id="goods-info-wrapper">
-            <div class="mb-2 book-detail-subtitle">商品信息</div>
-            <div>
-              <span>价格:</span>
-              <span>{{ book.price }}</span>
-            </div>
-            <div>
-              <span>库存:</span>
-              <span>{{ book.stock }}</span>
-            </div>
-            <div>
-              <span>商品状态:</span>
-              <span>{{ book.status_mapped }}</span>
-            </div>
-            <div>
-              <span>ISBN:</span>
-              <span>{{ book.isbn }}</span>
-            </div>
+            {#            <div class="mb-2 book-detail-subtitle">商品信息</div>#}
+            {#            <div>#}
+            {#              <span>价格:</span>#}
+            {#              <span>{{ book.price }}</span>#}
+            {#            </div>#}
+            {#            <div>#}
+            {#              <span>库存:</span>#}
+            {#              <span>{{ book.stock }}</span>#}
+            {#            </div>#}
+            {#            <div>#}
+            {#              <span>商品状态:</span>#}
+            {#              <span>{{ book.status_mapped }}</span>#}
+            {#            </div>#}
+            {#            <div>#}
+            {#              <span>ISBN:</span>#}
+            {#              <span>{{ book.isbn }}</span>#}
+            {#            </div>#}
           </div>
         </div>
 
@@ -99,10 +103,10 @@
             </button>
           </div>
 
-{#          <div class="mb-2 pb-1">#}
-{#            <span>倒序</span> /#}
-{#            <span>正序</span>#}
-{#          </div>#}
+          {#          <div class="mb-2 pb-1">#}
+          {#            <span>倒序</span> /#}
+          {#            <span>正序</span>#}
+          {#          </div>#}
 
           {% if comments %}
             {% for comment in comments %}
@@ -151,10 +155,10 @@
             <a href="{% url 'book-posts' book.id %}">查看全部</a>
             <a href="{% url 'editor' %}?bind={{ book.id }}" class="write-post ms-3"><img src="{% static 'img/write.svg' %}" alt="发布">发布帖子</a>
           </div>
-{#          <div class="mb-2 pb-1 pt-2">#}
-{#            <span>倒序</span> /#}
-{#            <span>正序</span>#}
-{#          </div>#}
+          {#          <div class="mb-2 pb-1 pt-2">#}
+          {#            <span>倒序</span> /#}
+          {#            <span>正序</span>#}
+          {#          </div>#}
 
           {% if posts %}
             {% for post in posts %}
@@ -176,7 +180,7 @@
                   <a href="{% url 'detail_post' post.id %}" class="post-title-mini">
                     <span>{{ post.title }}</span>
                   </a>
-  {#                <p class="mt-2">{{ post.content|safe|truncatechars:200 }}</p>#}
+                  {#                <p class="mt-2">{{ post.content|safe|truncatechars:200 }}</p>#}
                   <div class="mt-2 post-content-truncated d-flex flex-column">
                     {{ post.content|safe|truncatechars:200 }}
                   </div>
@@ -196,11 +200,23 @@
       </div>
 
       {# 最后一列 #}
-      <div class="col-2">最后</div>
+      <div class="col-2">
+        {% if recommend_books %}
+          <span class="module-subtitle">为您推荐</span>
+
+          {% for book in recommend_books %}
+            {% include 'book/side_bar_book.html' with cover_size=150 %}
+            {% if not forloop.last %}
+              <hr>
+            {% endif %}
+          {% endfor %}
+
+        {% endif %}
+      </div>
 
     </div>
   </div>
   <body>
-    <script src="{% static 'js/write_comment.js' %}"></script>
+  <script src="{% static 'js/write_comment.js' %}"></script>
   </body>
 {% endblock %}

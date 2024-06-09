@@ -17,7 +17,8 @@
   <script src="{% static 'js/post_content_truncated.js' %}"></script>
   <script src="{% static 'js/check_login.js' %}"></script>
   <script src="{% static 'js/tooltip.js' %}"></script>
-  <script src="{% static 'js/search_btn.js' %}"></script>
+  <script src="{% static 'js/search.js' %}"></script>
+  <script src="{% static 'js/create_post_btn.js' %}"></script>
   <link rel="stylesheet" href="{% static 'css/forum/all.css' %}">
   <link rel="stylesheet" href="{% static 'css/breadcrumb_link.css' %}">
   <link rel="stylesheet" href="{% static 'css/forum/base_forum.css' %}">
@@ -42,14 +43,14 @@
 </head>
 <body>
 <div class="d-flex flex-column min-vh-100">
-  <div id="navbar-container">
+  <div id="navbar-container" class="fixed-top bg-white">
     <nav class="navbar py-1 rounded border-bottom">
       <div class="container d-flex justify-content-between flex-nowrap">
         <div class="d-flex">
           <a class="navbar-brand" id="forum-title" href="{% url 'home' %}"><b>ReadingForum</b></a>
           <ul class="navbar-nav me-auto flex-row">
             <li class="nav-item"><a href="{% url 'home' %}" class="nav-link px-2">首页</a></li>
-            <li class="nav-item"><a href="{% url 'book_list' %}" class="nav-link px-2">读书</a></li>
+            <li class="nav-item"><a href="{% url 'book-home' %}" class="nav-link px-2">读书</a></li>
             <li class="nav-item"><a href="{% url 'post_list' %}" class="nav-link px-2">交流</a></li>
             <li class="nav-item"><a href="#" class="nav-link px-2">关于</a></li>
             {% if request.session.is_admin %}
@@ -60,10 +61,10 @@
         <div class="d-flex flex-grow-1 justify-content-end">
           <div class="w-100 d-flex justify-content-end me-4">
             <div class="input-group" id="search-input-wrapper">
-              <span class="input-group-text" id="search-type">类型</span>
+              <span class="input-group-text" id="search-type">用户|书籍|帖子</span>
               <label for="search-input"></label>
               <input id="search-input" class="form-control z-3" type="search" placeholder="搜索">
-              <button id="search-btn"  type="button" class="btn btn-outline-primary z-3">馊索</button>
+              <button id="search-btn" type="button" class="btn btn-outline-primary z-3">搜索</button>
               <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
                 <span class="visually-hidden">Toggle Dropdown</span>
               </button>
@@ -103,16 +104,19 @@
               </ul>
             </div>
           {% else %}
-            {# 用户在哪里跳转到注册/登录页面，注册/登录完之后就跳转回原来的页面 #}
-            <a href="{% url "login" %}?next={% firstof request.path "/" %}" class="nav-link px-3" id="navbar-login">登录</a>
-            <a href="{% url 'register' %}?next={% firstof request.path "/" %}" class="nav-link px-3"
-               id="navbar-register">注册</a>
+            <div class="d-flex justify-content-around flex-nowrap align-items-center">
+              {# 用户在哪里跳转到注册/登录页面，注册/登录完之后就跳转回原来的页面 #}
+              <a href="{% url "login" %}?next={{ request.path }}" class="nav-link px-3 nowrap" id="navbar-login" style="white-space: nowrap">登录</a>
+              <a href="{% url 'register' %}?next={{ request.path }}" class="nav-link px-3 nowrap" style="white-space: nowrap"
+                 id="navbar-register">注册</a>
+            </div>
+
           {% endif %}
         </div>
       </div>
     </nav>
   </div>
-  <div class="flex-fill" style="margin-top: 48px;">
+  <div class="flex-fill" style="margin-top: 48px">
     {% block content %}
     {% endblock %}
   </div>

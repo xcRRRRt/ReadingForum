@@ -2,7 +2,7 @@ import os.path
 
 from django import views
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
@@ -19,11 +19,12 @@ verification_service = VerificationService()
 
 
 class LoginView(views.View):
+
     def get(self, request):
         form = LoginForm()
         return render(request, 'user/login.html', {'form': form})
 
-    def post(self, request):
+    def post(self, request: WSGIRequest):
         form = LoginForm(request.POST)
         if form.is_valid():
             request.session['username'] = form.cleaned_data['username']
@@ -35,11 +36,7 @@ class LoginView(views.View):
             request.session['avatar_url'] = user.get("avatar_url")
             if user.get("admin"):
                 request.session['is_admin'] = True
-            # request.session['avatar_url'] = userinfo_service.find_userinfo_by_username(
-            #     form.cleaned_data['username'],
-            #     'avatar_url'
-            # ).get("avatar_url")
-            return render(request, 'forum/home.html')
+            return redirect(request.POST.get("next", "home"))
         return render(request, 'user/login.html', {'form': form})
 
 
@@ -57,11 +54,10 @@ class RegisterView(views.View):
                 form.cleaned_data['password'],
                 form.cleaned_data['email']
             ).inserted_id
-            print(user_id)
             verification_service.delete_verification_code(form.cleaned_data['email'])
             request.session['username'] = form.cleaned_data['username']
             request.session['user_id'] = str(user_id)
-            return render(request, 'forum/home.html')
+            return redirect(request.POST.get("next", "home"))
         return render(request, "user/register.html", {"form": form})
 
 
@@ -84,7 +80,7 @@ class VerifyView(views.View):
 def logout(request: WSGIRequest):
     """注销"""
     request.session.clear()  # 删除session数据
-    return render(request, "forum/home.html")
+    return redirect("home")
 
 
 @AuthRequired.login_required()

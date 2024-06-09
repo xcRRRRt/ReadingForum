@@ -100,7 +100,6 @@
         <div class="mt-3">
           <div class="w-100 bg-danger-subtle">
             <span class="my-2 ms-2 fs-6 fw-bolder text-muted">热门帖子</span>
-            <a class="ms-3 text-decoration-none" href="#" style="font-size: 13px">查看更多&gt;&gt;</a>
           </div>
         </div>
         <div class="m-2 d-flex flex-column">
@@ -109,10 +108,11 @@
             {# 一个帖子 #}
             <div class="m-1 p-1 border rounded-3 home-page-post">
               {# 标题 #}
-              <div class="my-1 ms-3">
+              <div class="my-1 ms-3 ">
                 <a class="post-title-mini" href="{% url 'detail_post' hottest_post.id %}">
-                  <span>{{ hottest_post.title }}</span>
+                  <span>{{ hottest_post.title|truncatechars:20 }}</span>
                 </a>
+                <span class="me-4 mt-1 text-muted float-end" style="font-size: 12px">回复数量：{{ hottest_post.total_reply_count }}</span>
               </div>
               {# 内容 #}
               <div class="ms-3 my-1 post-content-truncated d-flex flex-column post-content-hover-show" style="font-size: 13px">

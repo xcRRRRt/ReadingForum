@@ -6,7 +6,7 @@
     {% if show_all and users %}
       <a style="font-size: 13px" class="ms-3 text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=user">查看更多>></a>
     {% endif %}
-    <div class="m-2 d-flex flex-column" {% if show_part == 1 %}style="min-height: 60vh"{% endif %}>
+    <div class="m-2" {% if show_part == 1 %}style="min-height: 60vh"{% endif %}>
       {% if users %}
         <div class="row flex-fill">
           {% for user in users %}
@@ -29,12 +29,25 @@
             </div>
           {% endfor %}
         </div>
-        
+
         {% if not show_all %}
           <div class="fs-6 mt-2 d-flex justify-content-center gap-3">
-            <a>上一页</a>
-            <span>888</span>
-            <a>下一页</a>
+            {% if page_now == 1 %}
+              <a class="text-decoration-none text-black-50">第一页</a>
+            {% else %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=user&page=1">第一页</a>
+            {% endif %}
+            {% if has_prev %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=user&page={{ page_prev }}">&lt;&lt;</a>
+            {% else %}
+              <a class="text-black-50 text-decoration-none">&lt;&lt;</a>
+            {% endif %}
+            <span>{{ page_now }}</span>
+            {% if has_next %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=user&page={{ page_next }}">&gt;&gt;</a>
+            {% else %}
+              <a class="text-black-50 text-decoration-none">&gt;&gt;</a>
+            {% endif %}
           </div>
         {% endif %}
       {% else %}

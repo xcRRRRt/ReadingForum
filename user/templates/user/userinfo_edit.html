@@ -12,7 +12,7 @@
 
         <div class="col-2">
           <div class="d-flex flex-column justify-content-center">
-            <img id="avatar" class="mx-auto" style="display: block" src="
+            <img id="avatar" class="mx-auto object-fit-cover" style="display: block" src="
                 {% if request.session.avatar_url %}{{ request.session.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                  alt="用户头像">
             <div id="edit-btn-group" class="btn-group-vertical px-3 mt-4">

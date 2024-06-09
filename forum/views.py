@@ -20,6 +20,24 @@ post_service = PostService()
 book_service = BookService()
 
 
+def find_announcements():
+    forum_rule_id = "66659c6d3ed9c098f9add645"
+    forum_qa_id = "6665d952103c85edb09a5133"
+    forum_bug_id = "6665d9dc103c85edb09a5135"
+
+    forum_announcements_ids = ["6662fd9179abd5fdfe44901e", "66659c6d3ed9c098f9add645", "6665d952103c85edb09a5133", "6665d9dc103c85edb09a5135"]
+
+    required_fields = ["author", "title", "labels"]
+    forum_rule_ = post_service.find_post_by_id(forum_rule_id, *required_fields)
+    forum_qa_ = post_service.find_post_by_id(forum_qa_id, *required_fields)
+    forum_bug_ = post_service.find_post_by_id(forum_bug_id, *required_fields)
+    forum_announcements_ = []
+    for id_ in forum_announcements_ids:
+        forum_announcements_.append(post_service.find_post_by_id(id_, *required_fields))
+
+    return forum_rule_, forum_qa_, forum_bug_, forum_announcements_
+
+
 def homepage(request):
     new_books = book_service.find_new_books(0, 8)
     new_posts = post_service.find_new_posts(0, 6)
@@ -39,9 +57,10 @@ def homepage(request):
         if "bound_book" in post:
             book = book_service.find_book_by_id(post["bound_book"], "title", "isbn")
             post["bound_book"] = book
-
+        forum_rule, forum_qa, forum_bug, forum_announcements = find_announcements()
     return render(request, "forum/home.html",
-                  {"new_books": new_books, "new_posts": new_posts})
+                  {"new_books": new_books, "new_posts": new_posts, "forum_rule": forum_rule, "forum_qa": forum_qa, "forum_bug": forum_bug,
+                   "forum_announcements": forum_announcements})
 
 
 class PostListView(views.View):
@@ -60,7 +79,6 @@ class PostListView(views.View):
             "new": self.paginator_new.page_info,
             "hot": self.paginator_hot.page_info
         }
-        print(page_info)
         context = {"new_posts": new_posts, "hottest_posts": hottest_posts, "paginator": page_info}
         return render(request, "forum/post_list.html", context)
 
@@ -270,7 +288,6 @@ class SearchResultView(views.View):
                     paginator.per_page = limit
 
         users = self.paginator_user.from_function(username="".join(queries))
-        users = list(filter(lambda user: user['username'] != request.session.get("username"), users))
 
         books = self.paginator_book.from_function(isbn_or_title="".join(queries))
 

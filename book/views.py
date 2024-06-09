@@ -1,3 +1,5 @@
+import pprint
+
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -18,7 +20,7 @@ userinfo_service = UserInfoService()
 post_service = PostService()
 
 
-class BookListView(views.View):
+class BookHomeView(views.View):
     recommend_book_id = "6662c66119c99ad88474d8b0"
 
     def get(self, request, *args, **kwargs):
@@ -26,7 +28,49 @@ class BookListView(views.View):
         hottest_books = book_service.find_hottest_books(0, 4)
         recommend_book = book_service.find_book_by_id(self.recommend_book_id, "title", "isbn", 'cover', "introduction")
         context = {"new_books": new_books, "hottest_books": hottest_books, "recommend_book": recommend_book}
-        return render(request, 'book/book_list.html', context)
+        return render(request, 'book/book_home.html', context)
+
+    def post(self, request, *args, **kwargs):
+        pass
+
+
+class BookNewListView(views.View):
+    paginator = PaginatorFromFunction(book_service.find_new_books, per_page=12)
+
+    def get(self, request, *args, **kwargs):
+        page = int(request.GET.get('page', 1))
+        self.paginator.page = page
+        books = self._process_book(self.paginator.from_function())
+        page_info = self.paginator.page_info
+        context = {"books": books, "page_info": page_info, "type": "new"}
+        return render(request, "book/book_list.html", context)
+
+    def _process_book(self, books):
+        for book in books:
+            if "label" in book:
+                book["label"] = book["label"].split(",")
+        return books
+
+    def post(self, request, *args, **kwargs):
+        pass
+
+
+class BookHotListView(views.View):
+    paginator = PaginatorFromFunction(book_service.find_hottest_books, per_page=12)
+
+    def get(self, request, *args, **kwargs):
+        page = int(request.GET.get('page', 1))
+        self.paginator.page = page
+        books = self._process_book(self.paginator.from_function())
+        page_info = self.paginator.page_info
+        context = {"books": books, "page_info": page_info, "type": "hot"}
+        return render(request, "book/book_list.html", context)
+
+    def _process_book(self, books):
+        for book in books:
+            if "label" in book:
+                book["label"] = book["label"].split(",")
+        return books
 
     def post(self, request, *args, **kwargs):
         pass
@@ -47,7 +91,23 @@ class BookDetailView(views.View):
         if book.get("posts"):
             posts = self._get_posts(book.get("posts"))
 
-        return render(request, 'book/book_detail.html', {"book": book, "comments": comments, "posts": posts})
+        context = {
+            "book": book,
+            "comments": comments,
+            "posts": posts
+        }
+
+        if "label" in book:
+            labels = book["label"]
+            recommend_books = []
+            for b in book_service.find_book_by_labels(labels, 0, 3):
+                if b.get("id") == str(book.get("id")):
+                    continue
+                recommend_books.append(b)
+            print(recommend_books)
+            context["recommend_books"] = recommend_books
+
+        return render(request, 'book/book_detail.html', context)
 
     def post(self, request):
         pass
@@ -128,21 +188,24 @@ class PostsListView(TemplateView):
         super().setup(request, *args, **kwargs)
         self.book_id = kwargs.get('book_id')
         self.book = book_service.find_book_by_id(self.book_id, 'isbn', 'title', 'cover', 'posts', 'price', 'book_data')
-        limit = int(request.GET.get('limit', self.paginator.per_page))
-        page = int(request.GET.get('page', self.paginator.page))
-        sort = request.GET.get('sort', self.paginator.sort_by.get('sort', ''))
-        if sort not in ['timedesc', 'timeasc', 'replycountdesc', 'replycountasc']:
-            sort = 'timedesc'
-        print(1)
+        page = int(request.GET.get('page', 1))
+        asc = int(request.GET.get('asc', -1))
+        sort = request.GET.get('sort', "hot")
+        if sort not in ['time', 'hot']:
+            sort = 'hot'
+        if asc not in [1, -1]:
+            asc = -1
+        print(asc)
 
         self.paginator.page = page
-        self.paginator.per_page = limit
-        self.paginator.sort_by = {'sort': sort}
+        self.paginator.clear_sort()
+        self.paginator.sort_by = {sort: asc}
+        print(self.paginator.sort_by)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        posts = self.paginator.from_function(book=self.book)
+        posts = self.paginator.from_function(post_ids=self.book.get("posts"))
         context['book'] = self.book
         context['posts'] = posts
-        print(posts)
+        context['paginator'] = self.paginator
         return context

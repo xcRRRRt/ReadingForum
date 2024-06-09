@@ -102,7 +102,7 @@ function add_table_head(required_fields, fields_name, can_sort_fields, sort_stat
         if (to_sort_field_idx > -1) {
             let up = $("<span class=\"sort-up sort-up-active\"></span>");
             let down = $("<span class=\"sort-down sort-down-active\"></span>");
-            let wrapper = $("<div class='sort-btn d-inline-flex flex-column ms-1 sort'></div>")
+            let wrapper = $("<div class='d-inline-flex flex-column ms-1 sort'></div>")
             wrapper.on('click', change_sort_state(wrapper));
             if (sort_state[to_sort_field_idx] === 1) {
                 up.css("visibility", "visible");
@@ -174,9 +174,32 @@ function load_table(paginator) {
             let value = obj[field] !== undefined && obj[field] !== null ? obj[field] : '';
             tr.append($("<td></td>").text(value));
         }
-        let href = window.location.pathname + "edit/" + obj.id
-        tr.append('<td><a href="' + href + '">修改</a>/<a href="#">删除</a></td>')
+        let update_href = window.location.pathname + "edit/" + obj.id
+        let delete_href = window.location.pathname + "delete/" + obj.id
+        tr.append('<td><a href="' + update_href + '">修改</a>/<a id="delete" href="#">删除</a></td>')
         table.append(tr);
+        tr.find("#delete").on("click", function () {
+            $.ajax({
+                url: delete_href,
+                method: 'get',
+                success: function (res) {
+                    if (res['status'] === "success") {
+                        show_toast("bg-success", "结果", "", "删除成功");
+                        let page_now_href = $("ul.pagination li.active a").attr("href");
+                        $.ajax({
+                            url: page_now_href,
+                            method: "get",
+                            success: function (res) {
+                                console.log(res);
+                                load_table(res);
+                            }
+                        });
+                    } else {
+                        show_toast("bg-warning", "结果", "", "删除失败");
+                    }
+                }
+            });
+        });
     }
 
     // 页码

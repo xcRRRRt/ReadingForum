@@ -277,6 +277,9 @@ class PaginatorFromFunction:
             if v != 0:
                 self._sort_by[k] = v
 
+    def clear_sort(self):
+        self._sort_by = {}
+
     @property
     def per_page(self):
         return self._per_page

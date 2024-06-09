@@ -11,26 +11,27 @@
       <label for="book-isbn" class="form-label text-secondary">ISBN</label>
       <input type="text" class="form-control" id="book-isbn" value="{{ book.isbn }}">
     </div>
-    <div class="col-3">
-      <label for="book-price" class="form-label text-secondary">价格</label>
-      <input type="number" step="0.01" class="form-control" id="book-price" value="{{ book.price }}">
-    </div>
-    <div class="col-2">
-      <label for="book-stock" class="form-label text-secondary">库存</label>
-      <input type="number" class="form-control" id="book-stock" placeholder="默认为0" value="{{ book.stock }}">
-    </div>
+{#    <div class="col-3">#}
+{#      <label for="book-price" class="form-label text-secondary">价格</label>#}
+{#      <input type="number" step="0.01" class="form-control" id="book-price" value="{{ book.price }}">#}
+{#    </div>#}
+{#    <div class="col-2">#}
+{#      <label for="book-stock" class="form-label text-secondary">库存</label>#}
+{#      <input type="number" class="form-control" id="book-stock" placeholder="默认为0" value="{{ book.stock }}">#}
+{#    </div>#}
     <div class="col-8">
       <label for="book-label" class="form-label text-secondary">标签(以空格分割多个标签)</label>
       <input type="text" class="form-control" id="book-label" placeholder="以空格分割多个标签" value="{% for label in book.label %}{{ label }} {% endfor %}">
     </div>
-    <div class="col-4">
-      <label for="book-status" class="form-label text-secondary">书籍状态</label>
-      <select id="book-status" class="form-select">
-        <option value="1" {% if book.status == 1 %}selected{% endif %}>在售</option>
-        <option value="2" {% if book.status == 2 %}selected{% endif %}>售空</option>
-        <option value="3" {% if book.status == 3 or not book.status %}selected{% endif %}>下架</option>
-      </select>
-    </div>
+    <div class="col-4"></div>
+{#    <div class="col-4">#}
+{#      <label for="book-status" class="form-label text-secondary">书籍状态</label>#}
+{#      <select id="book-status" class="form-select">#}
+{#        <option value="1" {% if book.status == 1 %}selected{% endif %}>在售</option>#}
+{#        <option value="2" {% if book.status == 2 %}selected{% endif %}>售空</option>#}
+{#        <option value="3" {% if book.status == 3 or not book.status %}selected{% endif %}>下架</option>#}
+{#      </select>#}
+{#    </div>#}
     <div class="col-4">
       <label for="book-cover" class="form-label text-secondary">封面</label>
       <input type="file" class="form-control" id="book-cover-upload" accept="image/*">
@@ -105,10 +106,10 @@
 
               let title = $("#book-title").val();
               let isbn = $("#book-isbn").val();
-              let price = $("#book-price").val();
-              let stock = $("#book-stock").val();
+              {#let price = $("#book-price").val();#}
+              {#let stock = $("#book-stock").val();#}
               let label = $("#book-label").val();
-              let status = $("#book-status").val();
+              {#let status = $("#book-status").val();#}
               let cover = $("#book-cover-upload")[0].files[0];  // 获取文件
               let introduction = $("#book-introduction").val();
 
@@ -134,7 +135,7 @@
               form_data.append('isbn', isbn);
 
               // 处理库存
-              if (stock < 0) {
+{% comment %}              if (stock < 0) {
                   $("#book-stock").addClass("is-invalid");
                   show_toast("text-bg-warning", "提示", "", "库存不能小于0");
                   return;
@@ -143,10 +144,10 @@
               } else {
                   $("#book-stock").removeClass("is-invalid");
                   form_data.append("stock", stock);
-              }
+              }{% endcomment %}
 
               // 处理价格
-              if (price < 0) {
+{% comment %}              if (price < 0) {
                   $("#book-price").addClass("is-invalid");
                   show_toast("text-bg-warning", "提示", "", "价格不能小于0");
                   return;
@@ -157,7 +158,7 @@
               } else {
                   $("#book-price").removeClass("is-invalid");
                   form_data.append("price", price);
-              }
+              }{% endcomment %}
               // let reg = /(^[1-9](\d+)?(\.\d{1,2})?$)|(^0$)|(^\d\.\d{1,2}$)/;
               // if (price.trim() === "") {
               //    $("#book-title").addClass("is-invalid");
@@ -178,8 +179,8 @@
               // 标签、封面、简介、状态
               if (label)
                   form_data.append('label', label);
-              if (status)
-                  form_data.append("status", status);
+              {#if (status)#}
+              {#    form_data.append("status", status);#}
               if (cover)
                   form_data.append('cover', cover);
               if (introduction)

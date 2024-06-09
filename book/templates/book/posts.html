@@ -8,7 +8,7 @@
       {# 面包屑 #}
       <nav aria-label="breadcrumb" class="pt-2">
         <ul class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'book-home' %}">读书</a></li>
           <li class="breadcrumb-item"><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></li>
           <li class="breadcrumb-item" aria-current="page">帖子</li>
         </ul>
@@ -24,10 +24,28 @@
         </div>
 
         <div class="align-items-center pb-2 border-bottom">
-          <a class="px-4 sort-btn sort-btn-up sort-btn-active" href="#">评论数量正序</a>
-          <a class="px-4 sort-btn sort-btn-down" href="#">评论数量倒序</a>
-          <a class="px-4 sort-btn sort-btn-up" href="#">时间正序</a>
-          <a class="px-4 sort-btn sort-btn-down" href="#">时间倒序</a>
+          {% if paginator.sort_by.hot == 1 %}
+            <a class="px-4 sort-btn sort-btn-up sort-btn-active" href="{% url 'book-posts' book.id %}?sort=hot&asc=1">评论数量正序</a>
+          {% else %}
+            <a class="px-4 sort-btn sort-btn-up" href="{% url 'book-posts' book.id %}?sort=hot&asc=1">评论数量正序</a>
+          {% endif %}
+          {% if paginator.sort_by.hot == -1 %}
+            <a class="px-4 sort-btn sort-btn-down sort-btn-active" href="{% url 'book-posts' book.id %}?sort=hot&asc=-1">评论数量倒序</a>
+          {% else %}
+            <a class="px-4 sort-btn sort-btn-down" href="{% url 'book-posts' book.id %}?sort=hot&asc=-1">评论数量倒序</a>
+          {% endif %}
+
+          {% if paginator.sort_by.time == 1 %}
+            <a class="px-4 sort-btn sort-btn-up sort-btn-active" href="{% url 'book-posts' book.id %}?sort=time&asc=1">时间正序</a>
+          {% else %}
+            <a class="px-4 sort-btn sort-btn-up" href="{% url 'book-posts' book.id %}?sort=time&asc=1">时间正序</a>
+          {% endif %}
+
+          {% if paginator.sort_by.time == -1 %}
+            <a class="px-4 sort-btn sort-btn-down sort-btn-active" href="{% url 'book-posts' book.id %}?sort=time&asc=-1">时间倒序</a>
+          {% else %}
+            <a class="px-4 sort-btn sort-btn-down" href="{% url 'book-posts' book.id %}?sort=time&asc=-1">时间倒序</a>
+          {% endif %}
           <span class="px-4 ms-3">第<b>n</b>页</span>
         </div>
 
@@ -64,6 +82,25 @@
         {% else %}
 
         {% endif %}
+        {# 分页器 #}
+        <div id="mini-paginator" class="mt-4 hstack gap-3 d-flex justify-content-center align-items-center">
+          <a {% if paginator.has_prev == True %}
+            href="{% url 'book-comments' book.id %}?page=1"
+          {% else %}
+
+          {% endif %} >&lt;&lt;第一页</a>
+          <a {% if paginator.has_prev == True %}
+            href="{% url 'book-comments' book.id %}?page={{ paginator.previous }}"
+          {% else %}
+
+          {% endif %} >&lt;上一页</a>
+          <a {% if paginator.has_next == True %}
+            href="{% url 'book-comments' book.id %}?page={{ paginator.next }}"
+          {% else %}
+
+          {% endif %} >下一页&gt;</a>
+          <div>第<b>{{ paginator.page }}</b>页</div>
+        </div>
 
       </div>
 

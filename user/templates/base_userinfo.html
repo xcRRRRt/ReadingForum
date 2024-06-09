@@ -5,7 +5,7 @@
   <div id="userinfo-bg-container">
     <img src="{% static 'img/default_userinfo_cover.svg' %}" alt="你老公张磊">
     <div id="avatar-wrapper">
-      <img id="avatar" src="{% if avatar_url %}{{ avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}" alt="用户头像">
+      <img id="avatar" class="object-fit-cover" src="{% if avatar_url %}{{ avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}" alt="用户头像">
     </div>
   </div>
   <div class="container">

@@ -41,7 +41,6 @@ $(document).ready(function () {
                 window.location.href = href;
             } else if (type === "2") {
                 let to_search_labels = search_val.split(" ")
-                alert(to_search_labels.length)
                 to_search_labels = to_search_labels.join("+");
                 href = "/search-labels/?label=" + to_search_labels;
                 window.location.href = href;

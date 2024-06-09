@@ -6,7 +6,7 @@ from typing import *
 from typing import Tuple, Any
 
 from bson import ObjectId
-from pymongo.results import UpdateResult, InsertOneResult
+from pymongo.results import UpdateResult, InsertOneResult, DeleteResult
 from utils.datetime_util import get_datetime_by_objectId
 
 from utils.db_operation import MongodbOperation
@@ -29,6 +29,10 @@ class BookService:
         data = {k: v for k, v in kwargs.items() if v is not None}
         res = self.db.book_insert_one(data)
         return res.acknowledged, str(res.inserted_id)
+
+    def delete_book(self, book_id: str | ObjectId) -> DeleteResult:
+        res = self.db.book_delete_one({"_id": ObjectId(book_id)})
+        return res
 
     def find_book_by_id(self, book_id: str, *required_fields, map_fields: bool = False) -> dict[str, Any] | None:
         """
@@ -125,7 +129,7 @@ class BookService:
             del book["_id"]
         return books
 
-    def find_book_by_labels(self, labels: list[str], skip: int, limit: int, sort_by: dict[str, int]) -> List[Mapping[str, Any]]:
+    def find_book_by_labels(self, labels: list[str], skip: int, limit: int, sort_by: dict[str, int] | None = None) -> List[Mapping[str, Any]]:
         pipeline = [
             {"$match": {"label": {"$in": labels}}},
             {
@@ -138,6 +142,7 @@ class BookService:
                 }
             },
             {"$sort": {"match_label_count": -1}},
+            {"$project": {"cover": 1, "title": 1, "author": 1, "label": 1, "introduction": 1, "isbn": 1}},
             {"$skip": skip},
             {"$limit": limit}
         ]
@@ -155,8 +160,7 @@ class BookService:
         :param sort_by:
         :return:
         """
-        if sort_by is None:
-            sort_by = {"_id": -1}
+        sort_by = {"_id": -1}
         cursor = self.db.book_find({}, projection={'title': 1,
                                                    'isbn': 1,
                                                    'cover': 1,

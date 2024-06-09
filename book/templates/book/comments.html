@@ -8,7 +8,7 @@
       {# 面包屑 #}
       <nav aria-label="breadcrumb" class="pt-2">
         <ul class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{% url 'book_list' %}">读书</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'book-home' %}">读书</a></li>
           <li class="breadcrumb-item"><a href="{% url 'book_detail' book.id %}">{{ book.title }}</a></li>
           <li class="breadcrumb-item" aria-current="page">书评</li>
         </ul>

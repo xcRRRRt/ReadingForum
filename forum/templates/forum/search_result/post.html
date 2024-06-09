@@ -47,6 +47,27 @@
             </div>
           {% endfor %}
         </div>
+        {% if not show_all %}
+          <div class="fs-6 mt-2 d-flex justify-content-center gap-3">
+            {% if page_now == 1 %}
+              <a class="text-decoration-none text-black-50">第一页</a>
+            {% else %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=post&page=1">第一页</a>
+            {% endif %}
+            {% if has_prev %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=post&page={{ page_prev }}">&lt;&lt;</a>
+            {% else %}
+              <a class="text-black-50 text-decoration-none">&lt;&lt;</a>
+            {% endif %}
+            <span>{{ page_now }}</span>
+            {% if has_next %}
+              <a class="text-decoration-none" href="{% url 'search' %}?q={{ query }}&sp=post&page={{ page_next }}">&gt;&gt;</a>
+            {% else %}
+              <a class="text-black-50 text-decoration-none">&gt;&gt;</a>
+            {% endif %}
+          </div>
+        {% endif %}
+
       {% else %}
         <div class="border rounded-3 m-2 fs-6">
           <div class="module-not-found my-5 text-center text-light-emphasis">没有找到帖子╥﹏╥...</div>

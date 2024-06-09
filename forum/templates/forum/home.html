@@ -2,16 +2,16 @@
 {% load static %}
 
 {% block content %}
-  
+
   {% include 'forum/create_post_btn.html' %}
-  
+
   <div class="container">
     <div class="mx-5 mt-2">
       <div class="h4 text-body">欢迎来到<b id="forum-title">ReadingForum</b></div>
       <div id="announcement" class="text-body" style="font-size: 14px">请阅读&nbsp;
-        <a class="text-decoration-none" href="#">论坛规则</a>&nbsp;
-        <a class="text-decoration-none" href="#">常见问题QA</a>&nbsp;
-        <a class="text-decoration-none" href="#">bug反馈</a>&nbsp;
+        <a class="text-decoration-none" href="{% url 'detail_post' forum_rule.id %}">论坛规则</a>&nbsp;
+        <a class="text-decoration-none" href="{% url 'detail_post' forum_qa.id %}">常见问题QA</a>&nbsp;
+        <a class="text-decoration-none" href="{% url 'detail_post' forum_bug.id %}">bug反馈</a>&nbsp;
       </div>
     </div>
 
@@ -21,7 +21,7 @@
         <div class="mb-3">
           <div class="w-100 bg-info-subtle">
             <span class="my-2 ms-2 fs-6 fw-bolder text-muted">最新帖子</span>
-            <a class="ms-3 text-decoration-none" href="#" style="font-size: 13px">查看更多&gt;&gt;</a>
+            <a class="ms-3 text-decoration-none" href="{% url 'post_list' %}" style="font-size: 13px">查看更多&gt;&gt;</a>
           </div>
           <div class="m-2 d-flex flex-column">
 
@@ -88,11 +88,22 @@
             {% endfor %}
           </div>
         </div>
-        
+
         <div>
-          <div class="w-100 bg-dark-subtle">
+          <div class="w-100 bg-dark-subtle mb-2">
             <span class="my-2 ms-2 fs-6 fw-bolder text-muted">论坛公告</span>
           </div>
+          {% for post in forum_announcements %}
+            {# 一个帖子 #}
+            <div class="m-1 p-1 border rounded-3 home-page-post">
+              {# 标题 #}
+              <div class="my-1 ms-3">
+                <a class="post-title-mini" href="{% url 'detail_post' post.id %}">
+                  <span>{{ post.title }}</span>
+                </a>
+              </div>
+            </div>
+          {% endfor %}
         </div>
 
       </div>
@@ -102,7 +113,7 @@
         <div class="mb-3">
           <div class="w-100 bg-warning-subtle">
             <span class="my-2 ms-2 fs-6 fw-bolder text-muted">新书速递</span>
-            <a class="ms-3 text-decoration-none" href="#" style="font-size: 13px">查看更多&gt;&gt;</a>
+            <a class="ms-3 text-decoration-none" href="{% url 'book-new-list' %}" style="font-size: 13px">查看更多&gt;&gt;</a>
           </div>
           <div class="row m-2">
             {% for new_book in new_books %}

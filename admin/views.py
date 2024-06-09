@@ -2,6 +2,7 @@ from django import views
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views import View
 
 from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
@@ -79,9 +80,8 @@ class AdminBookView(views.View):
     """
     per_page = 10  # 每页文档条数
     page_range_size = 5  # 页码范围
-    required_fields = {'isbn': "ISBN", 'title': "书名", 'label': "标签", 'price': "价格", 'stock': '库存',
-                       'status': '状态'}  # 需要的字段
-    can_sort = ['isbn', 'title', 'price', 'stock']  # 可以排序的字段
+    required_fields = {'isbn': "ISBN", 'title': "书名", 'label': "标签"}  # 需要的字段
+    can_sort = ['isbn', 'title']  # 可以排序的字段
     can_search = ['isbn', 'title']  # 可以被搜索的字段
     can_choose = ['status']  # 可以被选择的字段
     paginator = Paginator(book_service, required_fields, can_sort, can_search, can_choose, per_page, page_range_size)
@@ -135,10 +135,10 @@ class AdminBookAddView(views.View):
 
         title = request.POST.get("title")
         isbn = request.POST.get("isbn")
-        price = float(request.POST.get("price"))
-        stock = int(request.POST.get("stock"))
+        # price = float(request.POST.get("price"))
+        # stock = int(request.POST.get("stock"))
         label = request.POST.get("label")
-        status = int(request.POST.get("status"))
+        # status = int(request.POST.get("status"))
         introduction = request.POST.get("introduction")
 
         labels = None
@@ -146,8 +146,8 @@ class AdminBookAddView(views.View):
         if label:
             labels = list(set(filter(lambda string: len(string) > 0, label.strip().split(" "))))
 
-        if stock == 0:
-            status = 2
+        # if stock == 0:
+        #     status = 2
 
         book_data = {}
         for k, v in request.POST.items():
@@ -155,7 +155,7 @@ class AdminBookAddView(views.View):
                 book_data[k] = v
 
         success, insert_id = book_service.create_book(title=title, isbn=isbn,
-                                                      price=price, stock=stock, status=status,
+                                                      # price=price, stock=stock, status=status,
                                                       label=labels, introduction=introduction, book_data=book_data)
 
         if cover:  # 处理封面文件
@@ -176,10 +176,10 @@ class AdminBookUpdateView(views.View):
 
         title = request.POST.get("title")
         isbn = request.POST.get("isbn")
-        price = float(request.POST.get("price"))
-        stock = int(request.POST.get("stock"))
+        # price = float(request.POST.get("price"))
+        # stock = int(request.POST.get("stock"))
         label = request.POST.get("label")
-        status = int(request.POST.get("status"))
+        # status = int(request.POST.get("status"))
         introduction = request.POST.get("introduction")
 
         labels = None
@@ -188,8 +188,8 @@ class AdminBookUpdateView(views.View):
         if label:
             labels = list(set(filter(lambda string: len(string) > 0, label.strip().split(" "))))
 
-        if stock == 0:
-            status = 2
+        # if stock == 0:
+        #     status = 2
 
         book_data = {}
         for k, v in request.POST.items():
@@ -199,7 +199,21 @@ class AdminBookUpdateView(views.View):
         if cover:
             cover_url = save_file(cover, "book/cover", _id)
 
-        book_service.update_book_by_id(_id, title=title, isbn=isbn, price=price, label=labels, cover_url=cover_url,
-                                       stock=stock, status=status, introduction=introduction, book_data=book_data)
+        book_service.update_book_by_id(_id, title=title, isbn=isbn, cover_url=cover_url, label=labels,
+                                       # price=price, stock=stock, status=status,
+                                       introduction=introduction, book_data=book_data)
 
         return render(request, "admin/admin_list.html")
+
+
+@AuthRequired.admin_required()
+class AdminBookDeleteView(View):
+    def get(self, request, _id):
+        print(_id)
+        if book_service.delete_book(_id).acknowledged:
+            return JsonResponse({"status": "success"})
+        else:
+            return JsonResponse({"status": "fail"})
+
+    def post(self, request, _id):
+        pass

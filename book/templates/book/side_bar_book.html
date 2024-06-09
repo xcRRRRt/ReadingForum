@@ -1,7 +1,13 @@
+{% load static %}
 {# context：book.cover: str, book.title: str, book.isbn: str, book.book_data: dict[str, Any], book.label: List[str] #}
 {% if book %}
   <div class="p-2">
-    <img class="mb-2" src="{{ book.cover }}" alt="暂无封面" style="width: 200px">
+
+    {% if book.cover %}
+      <img class="mb-2 object-fit-cover" src="{{ book.cover }}" alt="暂无封面" style="width: {% if cover_size %}{{ cover_size }}{% else %}200{% endif %}px">
+    {% else %}
+      <img class="mb-2 object-fit-cover" src="{% static 'img/default_book_cover.png' %}" alt="暂无封面" style="width: {% if cover_size %}{{ cover_size }}{% else %}200{% endif %}px">
+    {% endif %}
     {# 作品信息 #}
     <div id="book-other-data">
       <div id="comments-mini-title">

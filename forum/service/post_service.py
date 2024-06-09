@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import *
 import pprint
 from typing import Tuple
@@ -61,7 +61,9 @@ class PostService:
         :return: 帖子数据
         """
         projection = {field: 1 for field in required_fields}  # 创建投影，仅包含需要的字段
-        return self.db.post_find_one({"_id": ObjectId(post_id)}, projection=projection)
+        post = self.db.post_find_one({"_id": ObjectId(post_id)}, projection=projection)
+        post["id"] = str(post['_id'])
+        return post
 
     def update_post_likes(self, post_id: str, username: str,
                           click_like: bool, like_act: bool, unlike_act: bool):
@@ -198,28 +200,91 @@ class PostService:
             del post["_id"]
         return posts
 
-    def find_book_posts(self, book: dict[str, Any], skip: int, limit: int, sort_by: dict[str, Any]) -> List[dict[str, Any]]:
+    def find_book_posts(self, post_ids: List[str | ObjectId] | None, skip: int, limit: int, sort_by: dict[str, Any] | None = None) -> List[dict[str, Any]]:
         """
         找到绑定book的帖子
-        :param book:
+        :param post_ids:
         :param skip:
         :param limit:
         :param sort_by:
         :return:
         """
-        if len(book.get("posts", [])) == 0:
+        if not post_ids:
             return []
-        post_ids = book.get("posts")
-        posts = []
-        for post_id in post_ids:
-            post = self.find_post_by_id(post_id, 'title', 'content', 'author', 'labels')
+        print(sort_by)
+        post_ids = list(map(lambda x: ObjectId(x), post_ids))
+        if not sort_by:
+            sort_by = {"hot": -1}
+        pipeline = [
+            {"$match": {"_id": {"$in": post_ids}}},
+        ]
+        if "hot" in sort_by:
+            pipeline += [
+                {
+                    '$project': {
+                        'title': 1,
+                        'content': 1,
+                        'author': 1,
+                        'labels': 1,
+                        'reply_count': {'$size': {"$ifNull": ["$reply", []]}},
+                        'reply_reply_counts': {
+                            '$map': {
+                                'input': '$reply',
+                                'as': 'r',
+                                'in': {'$size': {'$ifNull': ['$$r.reply', []]}}
+                            }
+                        }
+                    }
+                },
+                {
+                    "$addFields": {
+                        "total_reply_count": {
+                            "$add": [{"$sum": "$reply_reply_counts"}, "$reply_count"]
+                        }
+                    }
+                },
+            ]
+            if sort_by["hot"] == -1:
+                pipeline += [{"$sort": {"total_reply_count": -1}}]
+            else:
+                pipeline += [{"$sort": {"total_reply_count": 1}}]
+            pipeline += [
+                {"$skip": skip},
+                {"$limit": limit},
+                {
+                    "$project": {
+                        "total_reply_count": 1,
+                        'title': 1,
+                        'content': 1,
+                        'author': 1,
+                        'labels': 1,
+                    }
+                }
+            ]
+        elif "time" in sort_by:
+            pipeline += [
+                {"$project": {'title': 1, 'content': 1, 'author': 1, 'labels': 1}}
+            ]
+            if sort_by["time"] == -1:
+                pipeline += [{"$sort": {"_id": -1}}]
+            else:
+                pipeline += [{"$sort": {"_id": 1}}]
+            pipeline += [
+                {"$skip": skip},
+                {"$limit": limit}
+            ]
+        posts = list(self.db.post_aggregate(pipeline))
+        posts_ = []
+        print(sort_by)
+        for post in posts:
             author_id = post.get("author")
             author_info = userinfo_service.find_userinfo_by_id(author_id, 'avatar_url', 'username')
             post["author"] = author_info.get('username')
             post['avatar_url'] = author_info.get('avatar_url')
             post['time'] = get_datetime_by_objectId(post['_id'])
-            posts.append(post)
-        return posts
+            posts_.append(post)
+        # pprint.pprint(posts_)
+        return posts_
 
     def reply_to_post(self, post_id: str | ObjectId, user_id: str | ObjectId, content: str) -> tuple[UpdateResult, ObjectId]:
         """
@@ -254,26 +319,6 @@ class PostService:
         )
         userinfo_service.add_reply(user_id, post_id, root_reply, doc['id'])
         return res, doc['id']
-
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
-    # 准备发疯
 
     def find_replies(self, post_id: str | ObjectId, skip: int, limit: int, sort_by: dict[str, Any] | None = None) -> List[Dict[str, Any]]:
         """
@@ -468,6 +513,66 @@ class PostService:
         # pprint.PrettyPrinter().pprint(posts)
         return posts
 
+    def find_hottest_posts_by_during_time(self, skip: int, limit: int, sort_by=None, past_hours: int = None):
+        if not past_hours:
+            past_hours = 24
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(hours=past_hours)
+
+        start_object_id = ObjectId.from_datetime(start_date)
+        end_object_id = ObjectId.from_datetime(end_date)
+
+        pipeline = [
+            {
+                '$facet': {
+                    'unwound_reply': [
+                        {'$project': {'title': 1, 'author': 1, 'reply': 1, 'bound_book': 1}},
+                        {"$unwind": "$reply"},
+                        {'$project': {'title': 1, 'author': 1, 'reply': 1, 'bound_book': 1}},
+                    ],
+                    'unwound_reply_reply': [
+                        {'$project': {'title': 1, 'author': 1, 'reply': 1, 'bound_book': 1}},
+                        {"$unwind": "$reply"},
+                        {"$unwind": "$reply.reply"},
+                        {'$project': {'title': 1, 'author': 1, 'reply': 1, 'bound_book': 1}},
+                    ]
+                }
+            },
+            {
+                "$project": {
+                    "combined_results": {"$concatArrays": ["$unwound_reply", "$unwound_reply_reply"]}
+                }
+            },
+            {"$unwind": "$combined_results"},
+            {"$replaceRoot": {"newRoot": "$combined_results"}},
+            {
+                "$match": {
+                    "$or": [
+                        {"reply.id": {"$gte": start_object_id, "$lte": end_object_id}},
+                        {"reply.reply.id": {"$gte": start_object_id, "$lte": end_object_id}},
+                    ],
+                },
+            },
+            {
+                "$group": {
+                    "_id": "$_id",
+                    "reply_count": {"$sum": 1},
+                    "title": {"$first": "$title"},
+                    "author": {"$first": "$author"},
+                    "bound_book": {"$first": "$bound_book"}
+                }
+            },
+        ]
+
+        posts = list(self.db.post_aggregate(pipeline))
+        for post in posts:
+            post["id"] = str(post["_id"])
+            post['time'] = get_datetime_by_objectId(post['id'])
+            del post["_id"]
+        pprint.PrettyPrinter().pprint(posts)
+        return posts
+
     def find_new_posts(self, skip, limit, sort_by=None):
         sort_by = {"_id": -1}
         cursor = self.db.post_find({}, projection={'title': 1, 'content': 1, 'author': 1, 'labels': 1, 'bound_book': 1})
@@ -480,6 +585,13 @@ class PostService:
             del post["_id"]
         # pprint.PrettyPrinter().pprint(posts)
         return posts
+
+    # def find_announcements(self, skip, limit, sort_by=None):
+    #     posts = self.db.post_find({"labels": "公告"}, projection={'title': 1, 'content': 1, 'author': 1, 'labels': 1, 'bound_book': 1})
+    #     for post in posts:
+    #         post["id"] = str(post["_id"])
+    #         del post['id']
+    #     return posts
 
 
 if __name__ == '__main__':
@@ -515,4 +627,7 @@ if __name__ == '__main__':
     # pprint.PrettyPrinter().pprint(reply)
     # post_service.find_hottest_posts(0, 4)
     # post_service.find_new_posts(0, 4)
-    pprint.PrettyPrinter().pprint(post_service.find_post_by_labels(["测试", "帖子"], 0, 10))
+    # pprint.PrettyPrinter().pprint(post_service.find_post_by_labels(["测试", "帖子"], 0, 10))
+
+    # post_service.find_hottest_posts_by_during_time(0, 10, past_hours=48)
+    post_service.find_book_posts(["66587f2d391cc654b830a4e5", "6665c48ee4f28a5248a16060", "6665c4c4e4f28a5248a16061"], 0, 10)

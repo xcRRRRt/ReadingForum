@@ -1,0 +1,114 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block admin_module %}
+  <div class="mb-2">
+    <div class="list-group list-group-horizontal">
+      <a href="{% url 'admin-report-post' %}" class="list-group-item list-group-item-action {% if reports_post %}active{% endif %}">
+        <span>帖子</span>
+        <span class="badge bg-danger rounded-pill">{{ type_count.post }}</span>
+      </a>
+      <a href="{% url 'admin-report-reply' %}" class="list-group-item list-group-item-action {% if reports_reply %}active{% endif %}">
+        <span>回复</span>
+        <span class="badge bg-danger rounded-pill">{{ type_count.reply }}</span>
+      </a>
+      <a href="{% url 'admin-report-comment' %}" class="list-group-item list-group-item-action {% if reports_comment %}active{% endif %}">
+        <span>书评</span>
+        <span class="badge bg-danger rounded-pill">{{ type_count.comment }}</span>
+      </a>
+    </div>
+  </div>
+
+  {% if reports_post %}
+    {% for report in reports_post %}
+      {# 帖子 #}
+      {# 需求字段：帖子id、标题，举报人用户名和举报内容 #}
+      <div class="mb-3">
+        <div class="py-2 px-3 border d-flex justify-content-between align-items-center">
+          <div class="w-75">
+            <div>
+              <span class="text-black-50">帖子标题：</span>
+              <a href="{% url 'detail_post' report.post_id %}">{{ report.title }}</a>
+              <span class="text-black-50">发布者：</span>
+              <a href="{% url 'userinfo' report.author %}">{{ report.author }}</a>
+            </div>
+            <div class="mt-2">
+              <a href="{% url 'userinfo' report.reporter %}">{{ report.reporter }}</a> <span class="text-black-50">举报：</span>
+              <div>{{ report.content }}</div>
+            </div>
+          </div>
+          <div>
+            <a href="{% url 'detail_post' report.post_id %}">帖子详情页</a>
+            <a href="{% url 'admin-report-operation' %}?id={{ report.id }}&operation=agree">屏蔽该帖</a>
+            <a href="{% url 'admin-report-operation' %}?id={{ report.id }}&operation=cancel">不同意</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    {% include 'forum/utils/mini_paginator.html' with url=request.path paginator=page_info %}
+  {% endif %}
+
+  {% if reports_reply %}
+    {% for report in reports_reply %}
+      {# 回复 #}
+      {# 帖子id，被举报人用户名和被举报的回复内容（可能有其回复他人的用户名），举报人用户名和举报内容 #}
+      <div class="mb-3">
+        <div class="py-2 px-3 border d-flex justify-content-between align-items-center">
+          <div class="w-75">
+            <div>
+              <div class="text-black-50">回复内容:</div>
+              <a href="{% url 'userinfo' report.reply.username %}">{{ report.reply.username }}</a>
+              {% if report.reply.reply_to %}
+                <span class="text-black-50">回复</span>
+                <a href="{% url 'userinfo' report.reply.reply_to.username %}">@{{ report.reply.reply_to.username }}</a>
+              {% endif %}
+              <div>
+                {{ report.reply.content }}
+              </div>
+            </div>
+            <div class="mt-2">
+              <a href="{% url 'userinfo' report.reporter.username %}">{{ report.reporter.username }}</a> <span class="text-black-50">举报：</span>
+              <div>{{ report.content }}</div>
+            </div>
+          </div>
+          <div>
+            <a href="{% url 'detail_post' report.post_id %}">帖子详情页</a>
+            <a href="{% url 'admin-report-operation' %}?id={{ report.id }}&operation=agree">屏蔽该回复</a>
+            <a href="{% url 'admin-report-operation' %}?id={{ report.id }}&operation=cancel">不同意</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    {% include 'forum/utils/mini_paginator.html' with url=request.path paginator=page_info %}
+  {% endif %}
+
+  {% if reports_comment %}
+    {% for report in reports_comment %}
+      {# 书评 #}
+      {# 书籍id，被举报人用户名和被举报的书评内容，举报人用户名和举报内容 #}
+      <div class="mb-3">
+        <div class="py-2 px-3 border d-flex justify-content-between align-items-center">
+          <div class="w-75">
+            <div>
+              <div class="text-black-50">书评内容：</div>
+              <a href="{% url 'userinfo' report.comment.author %}">{{ report.comment.author }}</a>
+              <div>
+                {{ report.comment.comment }}
+              </div>
+            </div>
+            <div class="mt-2">
+              <a href="{% url 'userinfo' report.reporter %}">{{ report.reporter }}</a> <span class="text-black-50">举报：</span>
+              <div>{{ report.content }}</div>
+            </div>
+          </div>
+          <div>
+            <a href="{% url 'book_detail' report.book_id %}">书籍详情页</a>
+            <a href="{% url 'admin-report-operation' %}?id={{ report.id }}&operation=agree">屏蔽该书评</a>
+            <a href="{% url 'admin-report-operation' %}?id={{ report.id }}&operation=cancel">不同意</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+{% endblock %}

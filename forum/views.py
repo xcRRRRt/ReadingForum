@@ -1,3 +1,5 @@
+import json
+
 from django import views
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -7,6 +9,7 @@ from bs4 import BeautifulSoup
 from book.service.book_service import BookService
 from forum.forms import PostEditorForm
 from forum.service.post_service import *
+from forum.service.report_service import ReportService
 from user.service.userinfo_service import UserInfoService
 from user.service.verification_service import VerificationService
 from utils.datetime_util import get_datetime_by_objectId
@@ -18,6 +21,7 @@ userinfo_service = UserInfoService()
 verification_service = VerificationService()
 post_service = PostService()
 book_service = BookService()
+report_service = ReportService()
 
 
 def find_announcements():
@@ -424,3 +428,11 @@ class LabelSearchResultView(views.View):
 
     def post(self, request, *args, **kwargs):
         pass
+
+
+def report(request):
+    report_type = request.POST.get("report_type")
+    report_info = json.loads(request.POST.get("report_info"))
+    report_content = request.POST.get("report_content")
+    res = report_service.add_report(report_type, report_info, request.session.get("user_id"), report_content).acknowledged
+    return JsonResponse({"success": res})

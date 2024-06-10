@@ -3,12 +3,6 @@ let post_id = href_split[href_split.length - 2];
 var page = 0
 
 $(document).ready(function () {
-    // const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    // const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-    // const documentHeight = document.documentElement.scrollHeight;
-    // console.log(scrollTop)
-    // console.log(windowHeight)
-    // console.log(documentHeight)
     checkUserLogin().then(function (is_login) {
         if (!is_login) {
             $(".top-reply-input-wrapper textarea").attr("disabled", "").attr("placeholder", "请登录后再来哦~");
@@ -28,43 +22,12 @@ $(document).ready(function () {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight || document.documentElement.clientHeight;
         const documentHeight = document.documentElement.scrollHeight;
-        // console.log(scrollTop)
-        // console.log(windowHeight)
-        // console.log(documentHeight)
         if (scrollTop + windowHeight >= documentHeight - 1) {
             load_post_reply_page();
         }
-        // let reply_all = $("#reply-all")
-        // let element_offset = reply_all.offset();
-        // let element_height = reply_all.outerHeight();
-        // let window_height = $(window).height();
-        // let scroll_top = $(window).scrollTop();
-        // let element_bottom = element_offset.top + element_height;
-        //
-        // if ((element_bottom >= scroll_top) && (element_bottom <= (scroll_top + window_height))) {
-        //     load_post_reply_page();
-        // }
-
     });
     load_post_reply_page();
 });
-
-function isElementFullyInViewport(el) {
-    // 获取元素的边界框
-    var rect = el.getBoundingClientRect();
-
-    // 获取视口的高度和宽度
-    var windowHeight = (window.innerHeight || document.documentElement.clientHeight);
-    var windowWidth = (window.innerWidth || document.documentElement.clientWidth);
-
-    // 判断元素是否完全在视口内
-    return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= windowHeight &&
-        rect.right <= windowWidth
-    );
-}
 
 function load_post_reply_page() {
     page += 1;
@@ -84,7 +47,7 @@ function load_post_reply_page() {
                     let replies_of_reply = reply['reply'];
                     if (replies_of_reply) {
                         for (const reply_of_reply of replies_of_reply) {
-                            let reply_reply_block = construct_reply_reply(reply_of_reply['avatar_url'], reply_of_reply['username'], reply_of_reply["content"], reply_of_reply['reply_time'], reply_of_reply["user_id"], reply_of_reply['reply_to'], reply_of_reply['id']);
+                            let reply_reply_block = construct_reply_reply(reply_of_reply['avatar_url'], reply_of_reply['username'], reply_of_reply["content"], reply_of_reply['reply_time'], reply_of_reply["user_id"], reply_of_reply['reply_to'], reply_of_reply['id'], reply['id']);
                             reply_reply_wrapper.append(reply_reply_block);
                         }
                     }
@@ -92,7 +55,7 @@ function load_post_reply_page() {
                         let more_reply_btn = construct_more_reply_btn();
                         reply_block.find(".content-wrapper").append(more_reply_btn);
                         more_reply_btn.on("click", function () {
-                            load_reply_reply_page(reply_block, reply['id'], 0)
+                            load_reply_reply_page(reply_block, reply['id'], 1)
                             $(this).remove();
                         });
                     }
@@ -120,7 +83,7 @@ function load_reply_reply_page(reply_block, root_reply_id, page) {
             reply_reply_wrapper.empty();
 
             for (const reply of replies) {
-                let reply_reply_block = construct_reply_reply(reply['avatar_url'], reply['username'], reply["content"], reply['reply_time'], reply["user_id"], reply['reply_to'], reply['id'])
+                let reply_reply_block = construct_reply_reply(reply['avatar_url'], reply['username'], reply["content"], reply['reply_time'], reply["user_id"], reply['reply_to'], reply['id'], root_reply_id)
                 reply_reply_wrapper.append(reply_reply_block);
             }
             let paginator_wrapper = $("<div>").addClass("reply-paginator");
@@ -167,6 +130,16 @@ function construct_reply(avatar_, username_, content_, reply_time_, user_id, rep
     let reply_trigger = $("<span>").addClass("ms-2 text-decoration-none reply-trigger").attr("reply-id", reply_id).attr("username", username_).text("回复").on('click', function () {
         reply_trigger_on_click(this);
     });
+    let report_trigger = $("<span>", {
+        "class": "ms-2 report",
+        "id": "report-trigger",
+        "data-report-type": "2",
+        "data-post-id": post_id,
+        "data-root-reply-id": reply_id,
+        "data-bs-toggle": "modal",
+        "data-bs-target": "#report-modal",
+        text: "举报"
+    });
     let reply_reply_wrapper = $("<div>").addClass("reply-reply-wrapper");
 
     reply_block.attr("user-id", user_id);
@@ -175,7 +148,7 @@ function construct_reply(avatar_, username_, content_, reply_time_, user_id, rep
     content.text(content_);
     reply_time.text(reply_time_);
 
-    reply_info_wrapper.append(reply_time, reply_trigger);
+    reply_info_wrapper.append(reply_time, reply_trigger, report_trigger);
     content_wrapper.append(username, content, reply_info_wrapper, reply_reply_wrapper);
     flex_container.append(avatar, content_wrapper);
     reply_block.append(flex_container);
@@ -197,7 +170,7 @@ function reply_trigger_on_click(trigger_) {
     });
 }
 
-function construct_reply_reply(avatar_, username_, content_, reply_time_, user_id, reply_to, reply_id) {
+function construct_reply_reply(avatar_, username_, content_, reply_time_, user_id, reply_to, reply_id, root_reply_id) {
     if (avatar_ === undefined || avatar_ === null || avatar_ === "") {
         avatar_ = "/static/img/default_avatar.svg";
     }
@@ -213,6 +186,17 @@ function construct_reply_reply(avatar_, username_, content_, reply_time_, user_i
     let reply_trigger = $("<span>").addClass("ms-2 text-decoration-none reply-trigger").attr("reply-id", reply_id).attr("username", username_).text("回复").on("click", function () {
         reply_trigger_on_click(this);
     });
+    let report_trigger = $("<span>", {
+        "class": "ms-2 report",
+        "id": "report-trigger",
+        "data-report-type": "3",
+        "data-post-id": post_id,
+        "data-root-reply-id": root_reply_id,
+        "data-reply-reply-id": reply_id,
+        "data-bs-toggle": "modal",
+        "data-bs-target": "#report-modal",
+        text: "举报"
+    });
 
     reply_reply_block.attr("user-id", user_id);
     avatar.attr("src", avatar_);
@@ -220,7 +204,7 @@ function construct_reply_reply(avatar_, username_, content_, reply_time_, user_i
     content.text(content_);
     reply_time.text(reply_time_);
 
-    reply_info_wrapper.append(reply_time, reply_trigger);
+    reply_info_wrapper.append(reply_time, reply_trigger, report_trigger);
     if (reply_to) {
         let span = $("<span>").addClass("ms-2").text("回复");
         let reply_to_user = $("<a>").addClass("text-decoration-none ms-1").attr("href", "/user/userinfo/" + username_ + "/").text("@" + reply_to['username'] + ":");
@@ -300,7 +284,7 @@ function send_reply(content, root_reply_id, reply_to, textarea) {
                     if (root_reply_id) {
                         let selector = '[reply-id="' + root_reply_id + '"]'
                         $(selector).find(".reply-reply-wrapper").append(construct_reply_reply(
-                            reply['avatar_url'], reply['username'], reply['content'], reply['reply_time'], reply['user_id'], reply['reply_to'], reply['id']
+                            reply['avatar_url'], reply['username'], reply['content'], reply['reply_time'], reply['user_id'], reply['reply_to'], reply['id'], root_reply_id
                         ));
                     } else {
                         $("#reply-all").prepend(

@@ -74,6 +74,7 @@ class BookService:
             "id": ObjectId(),
             "user_id": ObjectId(user_id),
             "comment": comment,
+            "block": False
         }
         res = self.db.book_update_one({'_id': ObjectId(book_id)},
                                       {'$push': {'comments': doc}})
@@ -96,6 +97,7 @@ class BookService:
             {'$match': {'_id': ObjectId(book_id)}},
             {'$unwind': '$comments'},
             {'$replaceRoot': {'newRoot': '$comments'}},
+            {"$match": {"block": False}},
             {'$sort': sort},
             {'$skip': skip},
             {'$limit': limit},
@@ -107,9 +109,22 @@ class BookService:
         for comment in comments:
             comment['time'] = get_datetime_by_objectId(comment.get("id"))
             user_info = userinfo_service.find_userinfo_by_id(comment['user_id'], "avatar_url", "username")
-            comment.update(user_info)
+            comment.update({"avatar_url": user_info.get("avatar_url"), "username": user_info.get("username")})
             formatted_comments.append(comment)
         return formatted_comments
+
+    def find_book_comment(self, book_id, comment_id):
+        pipeline = [
+            {'$match': {'_id': ObjectId(book_id)}},
+            {'$unwind': '$comments'},
+            {'$replaceRoot': {'newRoot': '$comments'}},
+            {"$match": {"id": ObjectId(comment_id)}}
+        ]
+        comment = list(self.db.book_aggregate(pipeline))[0]
+        comment["id"] = str(comment["id"])
+        user = userinfo_service.find_userinfo_by_id(comment['user_id'], "username", "avatar_url")
+        comment['author'] = user.get("username")
+        return comment
 
     def find_book_by_isbn_or_title(self, isbn_or_title: str, *required_fields, skip: int, limit: int, sort_by=None) -> List[dict[str, Any]]:
         filter_ = {
@@ -220,6 +235,10 @@ class BookService:
             del book["_id"]
         return books
 
+    def update_comment_block_status(self, book_id: str | ObjectId, comment_id: str | ObjectId, status: bool) -> UpdateResult:
+        res = self.db.book_update_one({"_id": ObjectId(book_id)}, {"$set": {"comments.$[elem].block": True}}, array_filters=[{"elem.id": ObjectId(comment_id)}])
+        return res
+
 
 if __name__ == "__main__":
     book_service = BookService()
@@ -228,6 +247,7 @@ if __name__ == "__main__":
     #                              price=round(random.random() * 100, 2), stock=random.randint(1, 100))
     # print(book_service.find_book_comments("66367f4d787d221d08173540", 0, 10, {"time": 1}))
     # print(book_service.find_book_by_isbn_or_title("孙子", skip=0, limit=10, sort_by={}))
-    pprint.PrettyPrinter().pprint(book_service.find_book_by_labels(['102', '96'], 0, 10, {}))
+    # pprint.PrettyPrinter().pprint(book_service.find_book_by_labels(['102', '96'], 0, 10, {}))
     # print(book_service.find_new_books(0, 5))
     # book_service.find_hottest_books(0, 4)
+    book_service.find_book_comment("66367f4d787d221d08173540", "65f90c7a81ade435b8c616cd")

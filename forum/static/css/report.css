@@ -1,0 +1,9 @@
+.report {
+    font-size: 13px;
+    color: #888888;
+    text-decoration: none;
+}
+
+.report:hover {
+    color: #494949;
+}

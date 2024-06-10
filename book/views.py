@@ -117,6 +117,8 @@ class BookDetailView(views.View):
         comments = []
         while len(comments) < min(length, self.comments_num) and len(_comments) != 0:
             comment = _comments.pop(-1)
+            if comment["block"]:
+                continue
             user_id = comment.get("user_id")
             user = userinfo_service.find_userinfo_by_id(user_id, "username", "avatar_url")
             comment['username'] = user.get("username")
@@ -174,6 +176,7 @@ class CommentsListView(views.View):
         self.paginator.sort_by = {"time": time_sort}
         comments = self.paginator.from_function(book_id=book_id)
         book = book_service.find_book_by_id(book_id, 'isbn', 'title', 'cover', 'label', 'price', 'book_data')
+        print(comments)
         return render(request, 'book/comments.html', {"book": book, "comments": comments, 'paginator': self.paginator})
 
     def post(self, request, book_id):

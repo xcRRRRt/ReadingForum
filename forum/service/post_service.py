@@ -44,7 +44,8 @@ class PostService:
             "content_tokenized": content_tokenized,
             "author": ObjectId(author),
             "bound_book": ObjectId(bound_book) if bound_book else None,
-            "labels": labels if labels else None
+            "labels": labels if labels else None,
+            "block": False
         }
         # Remove keys with None values
         data = {k: v for k, v in data.items() if v is not None}
@@ -53,15 +54,23 @@ class PostService:
         update_book_res = book_service.push_post(bound_book, post_id=insert_post_res.inserted_id)
         return insert_post_res, update_user_res, update_book_res
 
-    def find_post_by_id(self, post_id: str, *required_fields) -> dict[str, Any] | None:
+    def find_post_by_id(self, post_id: str, *required_fields, all_: bool = False) -> dict[str, Any] | None:
         """
         使用_id寻找帖子指定字段的值
         :param post_id: ObjectId
         :param required_fields: 需要的字段
+        :param all_: 是否需要所有帖子
         :return: 帖子数据
         """
         projection = {field: 1 for field in required_fields}  # 创建投影，仅包含需要的字段
-        post = self.db.post_find_one({"_id": ObjectId(post_id)}, projection=projection)
+        filter_ = {
+            "_id": ObjectId(post_id)
+        }
+        if not all_:
+            filter_['block'] = False
+        post = self.db.post_find_one(filter_, projection=projection)
+        if not post:
+            return None
         post["id"] = str(post['_id'])
         return post
 
@@ -150,7 +159,7 @@ class PostService:
         :return:
         """
         pipeline = [
-            {"$match": {"labels": {"$in": labels}}},
+            {"$match": {"labels": {"$in": labels}, "block": False}},
             {
                 "$addFields": {
                     "match_label_count": {
@@ -191,7 +200,7 @@ class PostService:
         if sort_by is None:
             sort_by = {}
         sort_by.update({"score": {"$meta": "textScore"}})
-        filter_ = {"$text": {"$search": query}}
+        filter_ = {"$text": {"$search": query}, "block": False}
         cursor = self.db.post_find(filter_, {"score": {"$meta": "textScore"}, "title_tokenized": 0,
                                              "content_tokenized": 0}).sort(sort_by)
         posts = list(cursor.skip(skip).limit(limit))
@@ -216,7 +225,7 @@ class PostService:
         if not sort_by:
             sort_by = {"hot": -1}
         pipeline = [
-            {"$match": {"_id": {"$in": post_ids}}},
+            {"$match": {"_id": {"$in": post_ids}, "block": False}},
         ]
         if "hot" in sort_by:
             pipeline += [
@@ -294,7 +303,7 @@ class PostService:
         :param content: 回复内容
         :return:
         """
-        doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content}
+        doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content, "block": False}
         res: UpdateResult = self.db.post_update_one({"_id": ObjectId(post_id)}, {"$push": {"reply": doc}})
         userinfo_service.add_reply(user_id, post_id, doc['id'])
         return res, doc['id']
@@ -310,7 +319,7 @@ class PostService:
         :param reply_to: 回复本回复的顶级回复下的某条回复
         :return:
         """
-        doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content}
+        doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content, "block": False}
         if reply_to:
             doc["reply_to"] = reply_to
         res: UpdateResult = self.db.post_update_one(
@@ -333,6 +342,7 @@ class PostService:
             {"$match": {"_id": ObjectId(post_id)}},
             {"$project": {"reply": 1, "_id": 0}},
             {"$unwind": "$reply"},
+            {"$match": {"reply.block": False}},
             {"$sort": {"reply.id": -1}},
             {"$skip": skip},
             {"$limit": limit},
@@ -354,6 +364,7 @@ class PostService:
         ]
         cursor = self.db.post_aggregate(pipeline)
         replies = list(cursor)
+        # pprint.pprint(replies)
         return replies
 
     def find_replies_of_reply(self, post_id: str | ObjectId, root_reply: ObjectId | str, skip: int, limit: int,
@@ -375,6 +386,7 @@ class PostService:
             {"$replaceRoot": {"newRoot": "$reply"}},
             {"$project": {"reply": 1}},
             {"$unwind": "$reply"},
+            {"$match": {"reply.block": False}},
             {"$sort": {"reply.id": 1}},
             {"$skip": skip},
             {"$limit": limit},
@@ -393,11 +405,13 @@ class PostService:
             {"$project": {"user_info": 0}},
             {"$addFields": {"reply_time": {"$toDate": "$id"}}}
         ]
+        # pprint.pprint(pipeline)
         cursor = self.db.post_aggregate(pipeline)
         replies = list(cursor)
         for reply in replies:
             if "reply_to" in reply:
                 reply["reply_to"] = self.find_one_reply(post_id, root_reply, reply['reply_to'])
+        # pprint.pprint(replies)
         return replies
 
     def find_one_reply(self, post_id: str | ObjectId, root_reply_id: str | ObjectId, secondary_reply_id: str | ObjectId | None = None):
@@ -464,6 +478,7 @@ class PostService:
 
     def find_hottest_posts(self, skip: int, limit: int, sort_by=None):
         pipeline = [
+            {"$match": {"block": False}},
             {
                 '$project': {
                     'title': 1,
@@ -510,7 +525,7 @@ class PostService:
             post["id"] = str(post["_id"])
             post['time'] = get_datetime_by_objectId(post['id'])
             del post["_id"]
-        # pprint.PrettyPrinter().pprint(posts)
+        pprint.PrettyPrinter().pprint(posts)
         return posts
 
     def find_hottest_posts_by_during_time(self, skip: int, limit: int, sort_by=None, past_hours: int = None):
@@ -575,7 +590,7 @@ class PostService:
 
     def find_new_posts(self, skip, limit, sort_by=None):
         sort_by = {"_id": -1}
-        cursor = self.db.post_find({}, projection={'title': 1, 'content': 1, 'author': 1, 'labels': 1, 'bound_book': 1})
+        cursor = self.db.post_find({"block": False}, projection={'title': 1, 'content': 1, 'author': 1, 'labels': 1, 'bound_book': 1})
         if sort_by:
             cursor = cursor.sort(sort_by)
         posts = list(cursor.skip(skip).limit(limit))
@@ -592,6 +607,25 @@ class PostService:
     #         post["id"] = str(post["_id"])
     #         del post['id']
     #     return posts
+
+    def update_post_block_status(self, post_id: str | ObjectId, status: bool) -> UpdateResult:
+        res = self.db.post_update_one({"_id": ObjectId(post_id)}, {"$set": {"block": status}})
+        return res
+
+    def update_reply_block_status(self, post_id: str | ObjectId, reply_id: str | ObjectId, status: bool) -> UpdateResult:
+        res = self.db.post_update_one({"_id": ObjectId(post_id)}, {"$set": {"reply.$[elem].block": True}}, array_filters=[{"elem.id": ObjectId(reply_id)}])
+        return res
+
+    def update_reply_reply_block_status(self, post_id: str | ObjectId, reply_id: str | ObjectId, reply_reply_id: str | ObjectId, status: bool) -> UpdateResult:
+        res = self.db.post_update_one(
+            {"_id": ObjectId(post_id)},
+            {"$set": {"reply.$[outer].reply.$[inner].block": True}},
+            array_filters=[
+                {"outer.id": ObjectId(reply_id)},
+                {"inner.id": ObjectId(reply_reply_id)}
+            ]
+        )
+        return res
 
 
 if __name__ == '__main__':
@@ -615,14 +649,14 @@ if __name__ == '__main__':
     #     post_service.reply_to_post(post_id, random.choice(users), "帖子回复" + str(i))
     #
     # post_id = "665c3221447867a69e1d51dd"
-    # replies = post_service.find_replies(post_id, skip=0, limit=100)
+    # replies = post_service.find_replies("6666e138e37dfaa85a6f5cdb", skip=0, limit=100)
     # num_replies = 100
     # for reply in replies:
     #     root_reply_id = reply["id"]
     #     for i in range(num_replies, 0, -1):
     #         post_service.reply_to_reply(post_id, random.choice(users), "回复的回复" + str(i), root_reply_id)
     #     num_replies -= 1
-
+    post_service.find_replies_of_reply("6666e138e37dfaa85a6f5cdb", "6666e4e7e37dfaa85a6f5ce0", 0, 4)
     # reply = post_service.find_chain_reply("665c3221447867a69e1d51dd", "6660a2fcd54779a40c26c0ce", "6660a5889d0d804a04f1ac69")
     # pprint.PrettyPrinter().pprint(reply)
     # post_service.find_hottest_posts(0, 4)
@@ -630,4 +664,6 @@ if __name__ == '__main__':
     # pprint.PrettyPrinter().pprint(post_service.find_post_by_labels(["测试", "帖子"], 0, 10))
 
     # post_service.find_hottest_posts_by_during_time(0, 10, past_hours=48)
-    post_service.find_book_posts(["66587f2d391cc654b830a4e5", "6665c48ee4f28a5248a16060", "6665c4c4e4f28a5248a16061"], 0, 10)
+    # post_service.find_book_posts(["66587f2d391cc654b830a4e5", "6665c48ee4f28a5248a16060", "6665c4c4e4f28a5248a16061"], 0, 10)
+    # post_service.update_post_block_status("6665c4c4e4f28a5248a16061"),
+    # post_service.update_reply_reply_block_status("6666e138e37dfaa85a6f5cdb", "6666e4e7e37dfaa85a6f5ce0", "6666e4ece37dfaa85a6f5ce1")

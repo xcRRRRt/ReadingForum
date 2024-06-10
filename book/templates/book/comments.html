@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+  {% include 'forum/utils/report.html' %}
   {% csrf_token %}
   <div class="container">
     <div class="mx-5 row">
@@ -60,18 +61,21 @@
                 {# 发布者信息 #}
                 <div id="author-info" class="d-flex">
                   <img class="mt-2" id="avatar-mini" style="width: 28px;height: 28px"
-                       src="
-                           {% if comment.avatar_url %}{{ comment.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
+                       src="{% if comment.avatar_url %}{{ comment.avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                        alt="头像">
                   <div class="ms-2">
-                    <a href="{% url 'userinfo' comment.username %}">{{ comment.username }}
-                    </a>
+                    <a href="{% url 'userinfo' comment.username %}">{{ comment.username }}</a>
                     <div class="text-secondary" style="font-size: 11px">{{ comment.time }}</div>
                   </div>
                 </div>
               </div>
               {# 书评内容 #}
-              <p class="mx-2">{{ comment.comment }}</p>
+              <p class="mx-2 mb-1">{{ comment.comment }}</p>
+              {# 举报 #}
+              <div>
+                <span id="report-trigger" data-report-type="4" data-book-id="{{ book.id }}" data-comment-id="{{ comment.id }}" class="ms-2 report" data-bs-toggle="modal"
+                      data-bs-target="#report-modal">举报</span>
+              </div>
             </div>
           {% endfor %}
         {% endif %}
@@ -102,6 +106,6 @@
     </div>
   </div>
   <body>
-    <script src="{% static 'js/write_comment_2.js' %}"></script>
+  <script src="{% static 'js/write_comment_2.js' %}"></script>
   </body>
 {% endblock %}

@@ -1,18 +1,20 @@
 from django import views
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.views import View
 
 from book.service.book_service import BookService
+from forum.service.report_service import ReportService
 from user.service.userinfo_service import UserInfoService
 from utils.file_utils import save_file
-from utils.paginator import Paginator
+from utils.paginator import Paginator, PaginatorFromFunction
 from utils.view_decorator import AuthRequired
 
 # Create your views here.
 book_service = BookService()
 user_service = UserInfoService()
+report_service = ReportService()
 
 
 @AuthRequired.admin_required
@@ -217,3 +219,72 @@ class AdminBookDeleteView(View):
 
     def post(self, request, _id):
         pass
+
+
+@AuthRequired.admin_required()
+class AdminReportPostListView(View):
+    paginator = PaginatorFromFunction(report_service.find_unreviewed_posts, per_page=10)
+
+    def get(self, request):
+        page = int(request.GET.get("page", 1))
+        self.paginator.page = page
+        reports = self.paginator.from_function()
+        page_info = self.paginator.page_info
+
+        type_count = report_service.count_type()
+        type_count["reply"] = type_count.get("reply", 0) + type_count.get("reply_of_reply", 0)
+
+        return render(request, "admin/report_list.html", {"reports_post": reports, "page_info": page_info, "type_count": type_count})
+
+    def post(self, request):
+        pass
+
+
+@AuthRequired.admin_required()
+class AdminReportReplyListView(View):
+    paginator = PaginatorFromFunction(report_service.find_unreviewed_replies, per_page=10)
+
+    def get(self, request):
+        page = int(request.GET.get("page", 1))
+        self.paginator.page = page
+        reports = self.paginator.from_function()
+        page_info = self.paginator.page_info
+
+        type_count = report_service.count_type()
+        type_count["reply"] = type_count.get("reply", 0) + type_count.get("reply_of_reply", 0)
+
+        return render(request, "admin/report_list.html", {"reports_reply": reports, "page_info": page_info, "type_count": type_count})
+
+    def post(self, request):
+        pass
+
+
+@AuthRequired.admin_required()
+class AdminReportCommentListView(View):
+    paginator = PaginatorFromFunction(report_service.find_unreviewed_comments, per_page=10)
+
+    def get(self, request):
+        page = int(request.GET.get("page", 1))
+        self.paginator.page = page
+        reports = self.paginator.from_function()
+        page_info = self.paginator.page_info
+
+        type_count = report_service.count_type()
+        type_count["reply"] = type_count.get("reply", 0) + type_count.get("reply_of_reply", 0)
+        type_count["comment"] = type_count.get("comment", 0)
+        type_count['post'] = type_count.get("post", 0)
+
+        return render(request, "admin/report_list.html", {"reports_comment": reports, "page_info": page_info, "type_count": type_count})
+
+    def post(self, request):
+        pass
+
+
+@AuthRequired.admin_required()
+class AdminReportOperationView(View):
+    def get(self, request):
+        report_id = request.GET.get("id")
+        operation = request.GET.get("operation")
+        print(operation, report_id)
+        report_service.set_reviewed(report_id, operation)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

@@ -165,8 +165,8 @@
               <div id="comments" class="border-top">
                 <div class="d-flex justify-content-between my-2">
                   {# 发布者信息 #}
-                  <div id="author-info" class="d-flex">
-                    <img id="avatar-mini"
+                  <div id="author-info" class="d-flex align-items-center">
+                    <img id="avatar-medium"
                          src="{% if post.author_avatar %}{{ post.author_avatar }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
                          alt="头像">
                     <div class="ms-3">

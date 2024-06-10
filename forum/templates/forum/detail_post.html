@@ -16,7 +16,6 @@
       <div class="col-9 pe-4">
         {# 标题 #}
         <h1 id="post-title">{{ post.title }}</h1>
-        {# 作者信息 #}
         <div id="author-info" class="d-flex align-items-center my-3">
           <img id="avatar-medium"
                src="{% if post_author_avatar_url %}{{ post_author_avatar_url }}{% else %}{% static 'img/default_avatar.svg' %}{% endif %}"
@@ -42,6 +41,11 @@
               <span>{{ label }}</span>
             </a>
           {% endfor %}
+        </div>
+      
+        <div>
+          <span id="report-trigger" data-report-type="1" data-post-id="{{ post.id }}" class="report btn btn-link" data-bs-toggle="modal" data-bs-target="#report-modal">举报</span>
+          {% include 'forum/utils/report.html' %}
         </div>
       
         {# 帖子回复 #}

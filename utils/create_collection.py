@@ -29,9 +29,9 @@ if __name__ == "__main__":
     if collection_name not in db.list_collection_names():
         collection = db.create_collection(collection_name)
         # 为username和email创建唯一索引
-        username_index = IndexModel("username", unique=True)
-        email_index = IndexModel("email", unique=True)
-        res = collection.create_indexes([username_index, email_index])
+        collection.create_index([("username", 1)], unique=True)
+        collection.create_index([("email", 1)], unique=True)
+        # res = collection.create_indexes([username_index, email_index])
         print(collection.index_information())
 
     # Post帖子collection
@@ -51,7 +51,12 @@ if __name__ == "__main__":
         res = collection.create_index([('label', 1)])
         print(collection.index_information())
 
-    collection_name = "label"
+    collection_name = "report"
     print(collection_name)
     if collection_name not in db.list_collection_names():
         collection = db.create_collection(collection_name)
+        res = collection.create_index([("is_reviewed", 1), ("report_type", 1)])
+        print(collection.index_information())
+
+    for collection_name in db.list_collection_names():
+        print(collection_name, db[collection_name].index_information())

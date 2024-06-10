@@ -15,6 +15,7 @@ from user.service.verification_service import VerificationService
 from utils.datetime_util import get_datetime_by_objectId
 from utils.detect_sensitive import Sensitive
 from utils.paginator import PaginatorFromFunction
+from utils.view_decorator import AuthRequired
 
 # Create your views here.
 userinfo_service = UserInfoService()
@@ -112,6 +113,7 @@ class PostListView(views.View):
         pass
 
 
+@AuthRequired.login_required()
 class EditorView(views.View):
     def get(self, request):
         form = PostEditorForm()

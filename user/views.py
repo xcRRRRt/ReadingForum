@@ -222,3 +222,51 @@ def is_login(request):
     username = request.session.get("username")
     is_login = True if username else False
     return JsonResponse({"is_login": is_login})
+
+
+class PostMessageListView(views.View):
+    def get(self, request):
+        message_type_count = userinfo_service.count_message_type(request.session.get("user_id"))
+        message_type_count["post"] = message_type_count.get("post", 0)
+        message_type_count["reply"] = message_type_count.get("reply", 0) + message_type_count.get("reply_reply", 0)
+
+        message_post_count = userinfo_service.count_message_post(request.session.get("user_id"))
+        # print(message_type_count)
+        # print(message_post_count)
+
+        return render(request, "user/message.html", {"message_type_count": message_type_count, "message_post_count": message_post_count})
+
+    def post(self, request):
+        pass
+
+
+class ReplyMessageListView(views.View):
+    def get(self, request):
+        message_type_count = userinfo_service.count_message_type(request.session.get("user_id"))
+        message_type_count["post"] = message_type_count.get("post", 0)
+        message_type_count["reply"] = message_type_count.get("reply", 0) + message_type_count.get("reply_reply", 0)
+
+        message_reply_count = userinfo_service.count_message_reply(request.session.get("user_id"))
+        message_reply_reply_count = userinfo_service.count_message_reply_reply(request.session.get("user_id"))
+        # print(message_type_count)
+        # print(message_reply_count)
+        # print(message_reply_reply_count)
+        context = {
+            "message_type_count": message_type_count,
+            "message_reply_count": message_reply_count,
+            "message_reply_reply_count": message_reply_reply_count
+        }
+        return render(request, 'user/message.html', context)
+
+    def post(self, request):
+        pass
+
+
+class MessageClearView(views.View):
+    def get(self, request):
+        for type_ in [1, 2, 3]:
+            userinfo_service.update_message_viewed_status(request.session.get("user_id"), type_)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+    def post(self, request):
+        pass

@@ -306,6 +306,10 @@ class PostService:
         doc = {"id": ObjectId(), "user_id": ObjectId(user_id), "content": content, "block": False}
         res: UpdateResult = self.db.post_update_one({"_id": ObjectId(post_id)}, {"$push": {"reply": doc}})
         userinfo_service.add_reply(user_id, post_id, doc['id'])
+
+        # 为帖子发布者添加消息
+        post_author_id = self.find_post_by_id(post_id, "author").get("author")
+        userinfo_service.push_message(post_author_id, 1, [post_id])
         return res, doc['id']
 
     def reply_to_reply(self, post_id: str | ObjectId, user_id: str | ObjectId, content: str,
@@ -327,6 +331,17 @@ class PostService:
             {"$push": {"reply.$.reply": doc}}
         )
         userinfo_service.add_reply(user_id, post_id, root_reply, doc['id'])
+
+        # 为根回复/子回复的发布者添加消息
+        if reply_to:
+            son_reply = self.find_one_reply(post_id, root_reply, reply_to)
+            son_reply_author_id = son_reply.get("user_id")
+            userinfo_service.push_message(son_reply_author_id, 3, [post_id, root_reply, reply_to])
+        else:
+            root_reply_ = self.find_one_reply(post_id, root_reply)
+            root_reply_author_id = root_reply_.get("user_id")
+            userinfo_service.push_message(root_reply_author_id, 2, [post_id, root_reply])
+
         return res, doc['id']
 
     def find_replies(self, post_id: str | ObjectId, skip: int, limit: int, sort_by: dict[str, Any] | None = None) -> List[Dict[str, Any]]:

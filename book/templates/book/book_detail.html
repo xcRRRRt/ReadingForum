@@ -153,7 +153,7 @@
           <div class="mb-2">
             <span class="module-subtitle">帖子</span>
             <a href="{% url 'book-posts' book.id %}">查看全部</a>
-            <a href="{% url 'editor' %}?bind={{ book.id }}" class="write-post ms-3"><img src="{% static 'img/write.svg' %}" alt="发布">发布帖子</a>
+            <a id="book-detail-write-post" href="{% url 'editor' %}?bind={{ book.id }}" class="write-post ms-3"><img src="{% static 'img/write.svg' %}" alt="发布">发布帖子</a>
           </div>
           {#          <div class="mb-2 pb-1 pt-2">#}
           {#            <span>倒序</span> /#}

@@ -1,4 +1,5 @@
 import datetime
+import pprint
 from typing import *
 
 from bson import ObjectId
@@ -14,6 +15,7 @@ COLLECTION_NAME = "userinfo"  # 集合
 class UserInfoService:
     def __init__(self):
         self.db = MongodbOperation('readingforum', 'userinfo')
+        self.message_type_map = {1: "post", 2: "reply", 3: "reply_reply"}
 
     def create_user(self, username: str, password: str, email: str):
         """
@@ -249,10 +251,139 @@ class UserInfoService:
         res = self.db.userinfo_aggregate(pipeline)
         return list(res)[0].get('replies_num', 0)
 
+    def push_message(self, user_id: str | ObjectId, msg_type: int, msg_path: List[str | ObjectId]) -> UpdateResult:
+        """
+
+        :param user_id: 用户id
+        :param msg_type: 消息类型(1是帖子回复，2是根回复的回复，3是子回复的回复)
+        :param msg_path: 1是[帖子id]，2是[帖子id，根回复id], 3是[帖子id，根回复id，子回复id]
+        :return:
+        """
+        msg_path = list(map(lambda x: ObjectId(x), msg_path))
+        msg_type = int(msg_type)
+        doc = {"message_type": msg_type, "message_path": msg_path, "is_viewed": False}
+        res = self.db.userinfo_update_one({"_id": ObjectId(user_id)}, {"$push": {"message": doc}})
+        return res
+
+    def count_message_type(self, user_id: str | ObjectId):
+        """
+
+        :param user_id:
+        :return:
+        """
+        pipeline = [
+            {"$match": {"_id": ObjectId(user_id)}},
+            {"$unwind": "$message"},
+            {"$replaceRoot": {"newRoot": "$message"}},
+            {"$match": {"is_viewed": False}},
+            {
+                "$group": {
+                    "_id": "$message_type",
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        res = list(self.db.userinfo_aggregate(pipeline))
+        result = {}
+        for group in res:
+            result[self.message_type_map.get(group["_id"])] = group["count"]
+        return result
+
+    def count_message_post(self, user_id: str | ObjectId):
+        pipeline = [
+            {"$match": {"_id": ObjectId(user_id)}},
+            {"$unwind": "$message"},
+            {"$replaceRoot": {"newRoot": "$message"}},
+            {"$match": {"message_type": 1, "is_viewed": False}},
+            {
+                "$group": {
+                    "_id": "$message_path",
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        res = list(self.db.userinfo_aggregate(pipeline))
+        for group in res:
+            path = group["_id"]
+            del group["_id"]
+            post_id = path[0]
+            from forum.service.post_service import PostService
+            post_service = PostService()
+            post = post_service.find_post_by_id(post_id, "title", all_=True)
+            del post["_id"]
+            group["post"] = post
+        return res
+
+    def count_message_reply(self, user_id: str | ObjectId):
+        pipeline = [
+            {"$match": {"_id": ObjectId(user_id)}},
+            {"$unwind": "$message"},
+            {"$replaceRoot": {"newRoot": "$message"}},
+            {"$match": {"message_type": 2, "is_viewed": False}},
+            {
+                "$group": {
+                    "_id": "$message_path",
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        res = list(self.db.userinfo_aggregate(pipeline))
+        for group in res:
+            path = group["_id"]
+            del group["_id"]
+            post_id = path[0]
+            root_reply_id = path[1]
+            from forum.service.post_service import PostService
+            post_service = PostService()
+            root_reply = post_service.find_one_reply(post_id, root_reply_id)
+            group["reply"] = root_reply
+            group["post_id"] = post_id
+        return res
+
+    def count_message_reply_reply(self, user_id: str | ObjectId):
+        pipeline = [
+            {"$match": {"_id": ObjectId(user_id)}},
+            {"$unwind": "$message"},
+            {"$replaceRoot": {"newRoot": "$message"}},
+            {"$match": {"message_type": 3, "is_viewed": False}},
+            {
+                "$group": {
+                    "_id": "$message_path",
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+        res = list(self.db.userinfo_aggregate(pipeline))
+        for group in res:
+            path = group["_id"]
+            del group["_id"]
+            post_id, root_reply_id, son_reply_id = path[0], path[1], path[2]
+            from forum.service.post_service import PostService
+            post_service = PostService()
+            son_reply = post_service.find_one_reply(post_id, root_reply_id, son_reply_id)
+            group["reply"] = son_reply
+            group["post_id"] = post_id
+        return res
+
+    def update_message_viewed_status(self, user_id: str | ObjectId, message_type: int) -> UpdateResult:
+        filter_ = {"_id": ObjectId(user_id)}
+        update = {"$set": {"message.$[elem].is_viewed": True}}
+        array_filters = [
+            {"elem.message_type": message_type}
+        ]
+        res = self.db.userinfo_update_many(filter_, update, array_filters=array_filters)
+        return res
+
+
 
 if __name__ == '__main__':
     userinfo_service = UserInfoService()
     # print(userinfo_service.find_userinfos_by_username("1"))
-    print(userinfo_service.get_posts_num("testuser2"))
-    print(userinfo_service.get_comments_num("testuser2"))
-    print(userinfo_service.get_replies_num("testuser2"))
+    # print(userinfo_service.get_posts_num("testuser2"))
+    # print(userinfo_service.get_comments_num("testuser2"))
+    # print(userinfo_service.get_replies_num("testuser2"))
+
+    pprint.pprint(userinfo_service.count_message_type("65f90c7a81ade435b8c616cd"))
+    pprint.pprint(userinfo_service.count_message_post("65f90c7a81ade435b8c616cd"))
+    pprint.pprint(userinfo_service.count_message_reply("65f90c7a81ade435b8c616cd"))
+    pprint.pprint(userinfo_service.count_message_reply_reply("65f90c7a81ade435b8c616cd"))

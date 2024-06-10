@@ -20,6 +20,7 @@
   <script src="{% static 'js/search.js' %}"></script>
   <script src="{% static 'js/create_post_btn.js' %}"></script>
   <script src="{% static 'js/report.js' %}"></script>
+  <script src="{% static 'js/write_post.js' %}"></script>
   <link rel="stylesheet" href="{% static 'css/forum/all.css' %}">
   <link rel="stylesheet" href="{% static 'css/breadcrumb_link.css' %}">
   <link rel="stylesheet" href="{% static 'css/forum/base_forum.css' %}">
@@ -93,12 +94,12 @@
                 </li>
                 {# TODO 消息通知 #}
                 <li>
-                  <a class="dropdown-item d-flex align-items-center justify-content-between" href="#">消息
-                    <span class="badge bg-danger">4</span>
+                  <a class="dropdown-item d-flex align-items-center justify-content-between" href="{% url 'post-message' %}">消息
+{#                    <span class="badge bg-danger">4</span>#}
                   </a>
                 </li>
                 {# TODO 未定功能 #}
-                <li><a class="dropdown-item" href="#">链接</a></li>
+{#                <li><a class="dropdown-item" href="#">链接</a></li>#}
                 <li>
                   <hr class="dropdown-divider">
                 </li>

@@ -12,6 +12,10 @@ urlpatterns = [
     path('reset-verify/', views.reset_password_verify, name='reset_verify'),
     path('reset/', views.reset_password, name='reset'),
 
+    path('message/post/', views.PostMessageListView.as_view(), name='post-message'),
+    path('message/reply/', views.ReplyMessageListView.as_view(), name='reply-message'),
+    path("message/clear/", views.MessageClearView.as_view(), name='message-clear'),
+
     path('profile/', views.profile, name='profile'),
     path("profile/<username>/", views.profile_other, name='user_profile'),
     path('edit-avatar/', views.edit_avatar, name='edit_avatar'),

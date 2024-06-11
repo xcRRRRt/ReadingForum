@@ -159,7 +159,6 @@ class PostDetailView(views.View):
         # post_likes_count = post_service.get_post_likes(post_id)  # 获取点赞数量
         # user_post_like = post_service.have_user_liked_post(post_id, request.session.get("username"))  # 获取用户是否点赞过该帖子
         # context = {**context, **post_likes_count, **user_post_like}
-        print(context)
         return render(request, "forum/detail_post.html", context=context)
 
     def post(self, request, post_id):
@@ -349,7 +348,7 @@ class SearchResultView(views.View):
             'show_part': len(show_part), "show_user": show_user, "show_book": show_book, "show_post": show_post, "show_all": show_all
         }
 
-        print(context)
+        # print(context)
 
         return render(request, "forum/search_result.html", context)
 

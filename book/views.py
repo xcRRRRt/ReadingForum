@@ -21,7 +21,7 @@ post_service = PostService()
 
 
 class BookHomeView(views.View):
-    recommend_book_id = "6662c66119c99ad88474d8b0"
+    recommend_book_id = "6667bc36097ceeb2b6576e5e"
 
     def get(self, request, *args, **kwargs):
         new_books = book_service.find_new_books(0, 4)
@@ -104,7 +104,6 @@ class BookDetailView(views.View):
                 if b.get("id") == str(book.get("id")):
                     continue
                 recommend_books.append(b)
-            print(recommend_books)
             context["recommend_books"] = recommend_books
 
         return render(request, 'book/book_detail.html', context)

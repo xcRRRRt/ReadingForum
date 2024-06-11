@@ -31,10 +31,13 @@
 
               <div class="ms-3 post-content-truncated d-flex flex-column">
                 {{ post.brief_content|truncatechars:200 }}
-                <img class="mb-2" src="{{ post.first_img_src }}">
+                {% if post.first_img_src %}
+                  <img class="mb-2" src="{{ post.first_img_src }}">
+                {% endif %}
               </div>
 
-              <div class="d-flex flex-wrap px-2 label-all" style="position: relative">
+
+              <div class="d-flex flex-wrap px-2 mt-2 label-all" style="position: relative">
                 {% if post.labels %}
                   {% for label in post.labels %}
                     <a class="rounded-pill px-2 me-2 mb-2 label-wrapper" href="{% url 'search_labels' %}?label={{ label }}">

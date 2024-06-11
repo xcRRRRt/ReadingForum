@@ -16,3 +16,5 @@
    ```
 
 2. 本项目需要使用MongoDB和Redis，请在启动项目前**启动MongoDB和Redis**
+3. 在单独运行一次utils.create_collections.py
+4. 修改utils.detect_sensitive.py和utils.tokenize.py中的redis配置

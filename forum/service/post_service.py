@@ -12,7 +12,7 @@ from book.service.book_service import BookService
 from user.service.userinfo_service import UserInfoService
 from utils.db_operation import MongodbOperation
 from utils.paginator import PaginatorFromFunction
-from utils.tokenize import Tokenizer
+from utils.tokenizing import Tokenizer
 from utils.datetime_util import get_datetime_by_objectId
 
 userinfo_service = UserInfoService()
@@ -420,7 +420,6 @@ class PostService:
             {"$project": {"user_info": 0}},
             {"$addFields": {"reply_time": {"$toDate": "$id"}}}
         ]
-        # pprint.pprint(pipeline)
         cursor = self.db.post_aggregate(pipeline)
         replies = list(cursor)
         for reply in replies:
@@ -628,7 +627,11 @@ class PostService:
         return res
 
     def update_reply_block_status(self, post_id: str | ObjectId, reply_id: str | ObjectId, status: bool) -> UpdateResult:
-        res = self.db.post_update_one({"_id": ObjectId(post_id)}, {"$set": {"reply.$[elem].block": True}}, array_filters=[{"elem.id": ObjectId(reply_id)}])
+        res = self.db.post_update_one(
+            {"_id": ObjectId(post_id)},
+            {"$set": {"reply.$[elem].block": True}},
+            array_filters=[{"elem.id": ObjectId(reply_id)}]
+        )
         return res
 
     def update_reply_reply_block_status(self, post_id: str | ObjectId, reply_id: str | ObjectId, reply_reply_id: str | ObjectId, status: bool) -> UpdateResult:

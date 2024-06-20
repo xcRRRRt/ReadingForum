@@ -55,7 +55,6 @@ class Sensitive:
                 del element['style']
 
         text = html.unescape(str(soup))
-        # filtered_text = text.replace('<span class="sensitive-word"></span>', "")
         return text, '<span class="sensitive-word"' in text
 
 

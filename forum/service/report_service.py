@@ -25,8 +25,6 @@ class ReportService:
         self.report_type_map = {1: "post", 2: "reply", 3: "reply_of_reply", 4: "comment"}
 
     def add_report(self, report_type: int | str, report_path: List[str | ObjectId], reporter: str | ObjectId, content: str) -> InsertOneResult:
-        print(report_path)
-        print(content)
         report_type = int(report_type)
         report_path = list(map(lambda x: ObjectId(x), report_path))
         doc = {

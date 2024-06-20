@@ -236,7 +236,11 @@ class BookService:
         return books
 
     def update_comment_block_status(self, book_id: str | ObjectId, comment_id: str | ObjectId, status: bool) -> UpdateResult:
-        res = self.db.book_update_one({"_id": ObjectId(book_id)}, {"$set": {"comments.$[elem].block": True}}, array_filters=[{"elem.id": ObjectId(comment_id)}])
+        res = self.db.book_update_one(
+            {"_id": ObjectId(book_id)},
+            {"$set": {"comments.$[elem].block": True}},
+            array_filters=[{"elem.id": ObjectId(comment_id)}]
+        )
         return res
 
 
